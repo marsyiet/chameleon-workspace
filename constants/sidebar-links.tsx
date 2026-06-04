@@ -1,104 +1,167 @@
 import {
-  GalleryVerticalEndIcon,
-  AudioLinesIcon,
-  TerminalIcon,
-  TerminalSquareIcon,
-  BotIcon,
-  BookOpenIcon,
+  LayoutDashboardIcon,
+  RadarIcon,
+  ServerIcon,
+  NetworkIcon,
+  CpuIcon,
+  ShieldCheckIcon,
+  GlobeIcon,
+  SearchIcon,
+  UsersIcon,
+  ClipboardListIcon,
   Settings2Icon,
-  FrameIcon,
-  PieChartIcon,
-  MapIcon,
+  KeyRoundIcon,
 } from "lucide-react"
 
 export const data = () => {
   return {
     user: {
-      name: "shadcn",
-      email: "m@example.com",
+      name: "Admin",
+      email: "admin@chameleon.io",
       avatar: "/globe.svg",
     },
 
     teams: [
       {
-        name: "Acme Inc",
-        logo: <GalleryVerticalEndIcon />,
+        name: "Chameleon",
+        logo: <ShieldCheckIcon />,
         plan: "Enterprise",
-      },
-      {
-        name: "Acme Corp.",
-        logo: <AudioLinesIcon />,
-        plan: "Startup",
-      },
-      {
-        name: "Evil Corp.",
-        logo: <TerminalIcon />,
-        plan: "Free",
       },
     ],
 
     navMain: [
       {
-        title: "Playground",
-        url: "#",
-        icon: <TerminalSquareIcon />,
-        isActive: true,
+        title: "Search",
+        url: "/search",
+        icon: <SearchIcon />,
+      },
+
+      {
+        title: "Dashboard",
+        url: "/",
+        icon: <LayoutDashboardIcon />,
+      },
+
+      {
+        title: "Discovery",
+        url: "/scans",
+        icon: <RadarIcon />,
         items: [
-          { title: "History", url: "#" },
-          { title: "Starred", url: "#" },
-          { title: "Settings", url: "#" },
+          {
+            title: "All Scans",
+            url: "/scans",
+          },
+          {
+            title: "New Scan",
+            url: "/scans/new",
+          },
+          {
+            title: "Scheduled Scans",
+            url: "/scans/scheduled",
+          },
         ],
       },
+
       {
-        title: "Models",
-        url: "#",
-        icon: <BotIcon />,
+        title: "Assets",
+        url: "/assets",
+        icon: <ServerIcon />,
         items: [
-          { title: "Genesis", url: "#" },
-          { title: "Explorer", url: "#" },
-          { title: "Quantum", url: "#" },
+          {
+            title: "All Assets",
+            url: "/assets",
+          },
+          {
+            title: "IP Addresses",
+            url: "/assets/ip-addresses",
+          },
+          {
+            title: "Domains",
+            url: "/assets/domains",
+          },
+          {
+            title: "Hosts",
+            url: "/assets/hosts",
+          },
         ],
       },
+
       {
-        title: "Documentation",
-        url: "#",
-        icon: <BookOpenIcon />,
+        title: "Services",
+        url: "/services",
+        icon: <NetworkIcon />,
         items: [
-          { title: "Introduction", url: "#" },
-          { title: "Get Started", url: "#" },
-          { title: "Tutorials", url: "#" },
-          { title: "Changelog", url: "#" },
+          {
+            title: "Open Ports",
+            url: "/services/ports",
+          },
+          {
+            title: "Detected Services",
+            url: "/services",
+          },
+          {
+            title: "HTTP Services",
+            url: "/services/http",
+          },
         ],
       },
+
       {
-        title: "Settings",
-        url: "#",
-        icon: <Settings2Icon />,
-        items: [
-          { title: "General", url: "#" },
-          { title: "Team", url: "#" },
-          { title: "Billing", url: "#" },
-          { title: "Limits", url: "#" },
-        ],
+        title: "Technologies",
+        url: "/technologies",
+        icon: <CpuIcon />,
+      },
+
+      {
+        title: "Attack Surface",
+        url: "/attack-surface",
+        icon: <GlobeIcon />,
       },
     ],
 
-    projects: [
+    campaigns: [
       {
-        name: "Design Engineering",
-        url: "#",
-        icon: <FrameIcon />,
+        name: "External Attack Surface",
+        url: "/campaigns/1",
+        icon: <RadarIcon />,
       },
       {
-        name: "Sales & Marketing",
-        url: "#",
-        icon: <PieChartIcon />,
+        name: "Corporate Network",
+        url: "/campaigns/2",
+        icon: <NetworkIcon />,
       },
       {
-        name: "Travel",
-        url: "#",
-        icon: <MapIcon />,
+        name: "Cloud Assets",
+        url: "/campaigns/3",
+        icon: <ServerIcon />,
       },
     ],
+
+    administration: [
+      {
+        name: "Users",
+        url: "/users",
+        icon: <UsersIcon />,
+      },
+
+      {
+        name: "Roles",
+        url: "/roles",
+        icon: <KeyRoundIcon />,
+      },
+
+      {
+        name: "Audit Logs",
+        url: "/audit-logs",
+        icon: <ClipboardListIcon />,
+      },
+
+      {
+        name: "Settings",
+        url: "/settings",
+        icon: <Settings2Icon />,
+      },
+    ],
+
   }
 }

@@ -1,60 +1,72 @@
+"use client"
+
 import Link from "next/link"
+import { usePathname } from "next/navigation"
 
 import {
   Breadcrumb,
-  BreadcrumbEllipsis,
   BreadcrumbItem,
   BreadcrumbLink,
   BreadcrumbList,
   BreadcrumbPage,
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
-import { Button } from "@/components/ui/button"
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
+import { useTranslations } from "next-intl"
+
+const LOCALES = ["fr", "en"]
+
+const segmentLabels: Record<string, string> = {
+  dashboard: "Dashboard",
+  settings: "Paramètres",
+  users: "Utilisateurs",
+  organizations: "Organisations",
+  profile: "Profil",
+}
 
 export function AppBreadcrumb() {
+  const pathname = usePathname()
+  const t = useTranslations("Workspace")
+
+  const segments = pathname
+    .split("/")
+    .filter(Boolean)
+    .filter((segment) => !LOCALES.includes(segment))
+
   return (
     <Breadcrumb>
       <BreadcrumbList>
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
-            <Link href="#">Home</Link>
+            <Link href="/">{t("home")}</Link>
           </BreadcrumbLink>
         </BreadcrumbItem>
-        <BreadcrumbSeparator />
-        <BreadcrumbItem>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button size="icon-sm" variant="ghost">
-                <BreadcrumbEllipsis />
-                <span className="sr-only">Toggle menu</span>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="start">
-              <DropdownMenuGroup>
-                <DropdownMenuItem>Documentation</DropdownMenuItem>
-                <DropdownMenuItem>Themes</DropdownMenuItem>
-                <DropdownMenuItem>GitHub</DropdownMenuItem>
-              </DropdownMenuGroup>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </BreadcrumbItem>
-        <BreadcrumbSeparator />
-        <BreadcrumbItem>
-          <BreadcrumbLink asChild>
-            <Link href="#">Components</Link>
-          </BreadcrumbLink>
-        </BreadcrumbItem>
-        <BreadcrumbSeparator />
-        <BreadcrumbItem>
-          <BreadcrumbPage>Breadcrumb</BreadcrumbPage>
-        </BreadcrumbItem>
+
+        {segments.map((segment, index) => {
+          const href = "/" + segments.slice(0, index + 1).join("/")
+          const isLast = index === segments.length - 1
+
+          const label =
+            segmentLabels[segment] ??
+            decodeURIComponent(segment)
+              .replace(/-/g, " ")
+              .replace(/\b\w/g, (char) => char.toUpperCase())
+
+          return (
+            <div key={href} className="flex items-center">
+              <BreadcrumbSeparator />
+
+              <BreadcrumbItem>
+                {isLast ? (
+                  <BreadcrumbPage>{label}</BreadcrumbPage>
+                ) : (
+                  <BreadcrumbLink asChild>
+                    <Link href={href}>{label}</Link>
+                  </BreadcrumbLink>
+                )}
+              </BreadcrumbItem>
+            </div>
+          )
+        })}
       </BreadcrumbList>
     </Breadcrumb>
   )

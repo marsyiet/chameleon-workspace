@@ -1,5 +1,7 @@
 {
-  "HomePage": {
-    "title": "Espace de travail"
+  "Workspace": {
+    "title": "Espace de travail",
+    "home": "Accueil",
+    "settings": "Paramètres"
   }
 }

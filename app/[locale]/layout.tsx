@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Recursive } from "next/font/google";
+import { Roboto } from "next/font/google";
 import "../globals.css";
 import { cn } from "@/lib/utils";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
@@ -9,13 +9,15 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { AppSidebar } from "@/components/app-sidebar";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppBreadcrumb } from "@/components/app-breadcrumb";
+import ReactQueryProvider from "@/providers/react-query-provider";
+import { Toaster } from "@/components/ui/sonner";
 
 type Props = {
   children: React.ReactNode;
   params: Promise<{ locale: string }>;
 };
 
-const inter = Recursive({
+const inter = Roboto({
   subsets: ["latin"],
   variable: "--font-sans",
 });
@@ -41,24 +43,31 @@ export default async function RootLayout({ children, params }: Props) {
         "font-sans",
         inter.variable
       )}
+      suppressHydrationWarning
     >
-      <TooltipProvider>
-        <body className="min-h-full flex flex-col">
-          <SidebarProvider>
-            <AppSidebar />
+      <ReactQueryProvider>
+        <TooltipProvider>
+          <body className="min-h-full flex flex-col">
+            <NextIntlClientProvider locale={locale} messages={messages}>
+              <SidebarProvider>
+                <AppSidebar />
 
-            <div className="w-full h-dvh relative">
-              <nav className="flex w-full items-center gap-4 fixed top-0 p-2 bg-sidebar border-b backdrop-blur-sm">
-                <SidebarTrigger />
-                <AppBreadcrumb />
-              </nav>
-            
-              {children}
-            </div>
+                <div className="w-full h-dvh relative">
+                  <nav className="flex w-full items-center gap-4 fixed top-0 p-2 bg-sidebar border-b backdrop-blur-sm">
+                    <SidebarTrigger />
+                    <AppBreadcrumb />
+                  </nav>
+                  <div className="px-4 pt-16 pb-4" >
+                    {children}
+                    <Toaster />
+                  </div>
+                </div>
 
-          </SidebarProvider>
-        </body>
-      </TooltipProvider>
+              </SidebarProvider>
+            </NextIntlClientProvider>
+          </body>
+        </TooltipProvider>
+      </ReactQueryProvider>
     </html >
   );
 }

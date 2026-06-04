@@ -3,7 +3,6 @@
 import * as React from "react"
 
 import { NavMain } from "@/components/nav-main"
-import { NavProjects } from "@/components/nav-projects"
 import { NavUser } from "@/components/nav-user"
 import { TeamSwitcher } from "@/components/team-switcher"
 
@@ -16,6 +15,8 @@ import {
 } from "@/components/ui/sidebar"
 
 import { data } from "@/constants/sidebar-links"
+import { NavCampaigns } from "./nav-campaigns"
+import { NavAdministration } from "./nav-administraion"
 
 export function AppSidebar(
   props: React.ComponentProps<typeof Sidebar>
@@ -30,7 +31,8 @@ export function AppSidebar(
 
       <SidebarContent>
         <NavMain items={sidebarData.navMain} />
-        <NavProjects projects={sidebarData.projects} />
+        <NavCampaigns campaigns={sidebarData.campaigns} />
+        <NavAdministration items={sidebarData.administration} />
       </SidebarContent>
 
       <SidebarFooter>
