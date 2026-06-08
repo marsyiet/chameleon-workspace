@@ -17,7 +17,6 @@ export default async function HomePage() {
               <div className="px-2 lg:px-6">
                 <ChartAreaInteractive />
               </div>
-              <DataTable data={data} />
             </div>
           </div>
         </div>

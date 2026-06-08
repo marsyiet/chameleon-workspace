@@ -20,8 +20,7 @@ export default function NewScan() {
 
   const router = useRouter()
 
-  const createScanMutation =
-    useCreateScan()
+  const createScanMutation = useCreateScan()
 
   const form = useForm<CreateScanFormValues>({
     resolver: zodResolver(createScanSchema),
@@ -42,18 +41,20 @@ export default function NewScan() {
     values: CreateScanFormValues
   ) => {
     try {
-      await createScanMutation.mutateAsync(
+      const res = await createScanMutation.mutateAsync(
         values
       )
 
       toast.success(
-        "Scan created successfully"
+        "SCAN_CREATION_SUCCESS"
       )
 
-      router.push("/scans")
-    } catch (error) {
+      router.push(
+        `/scans/${res.data.id}?title=${encodeURIComponent(values.name)}`
+      )
+    } catch (error: any) {
       toast.error(
-        "Failed to create scan"
+        error.message || "SCAN_CREATION_FAILED"
       )
     }
   }

@@ -1,7 +1,10 @@
 "use client"
 
 import Link from "next/link"
-import { usePathname } from "next/navigation"
+import {
+  usePathname,
+  useSearchParams,
+} from "next/navigation"
 
 import {
   Breadcrumb,
@@ -21,52 +24,98 @@ const segmentLabels: Record<string, string> = {
   users: "Utilisateurs",
   organizations: "Organisations",
   profile: "Profil",
+  scans: "Scans",
+}
+
+const isId = (segment: string) => {
+  return (
+    /^\d+$/.test(segment) ||
+    /^[0-9a-fA-F]{24}$/.test(segment) ||
+    /^[0-9a-fA-F-]{36}$/.test(segment)
+  )
 }
 
 export function AppBreadcrumb() {
   const pathname = usePathname()
+  const searchParams = useSearchParams()
   const t = useTranslations("Workspace")
 
-  const segments = pathname
+  const title = searchParams.get("title")
+
+  const pathSegments = pathname
     .split("/")
     .filter(Boolean)
-    .filter((segment) => !LOCALES.includes(segment))
+    .filter(
+      (segment) =>
+        !LOCALES.includes(segment)
+    )
+    .filter((segment) => !isId(segment))
+
+  const segments = title
+    ? [...pathSegments, title]
+    : pathSegments
 
   return (
     <Breadcrumb>
       <BreadcrumbList>
         <BreadcrumbItem>
           <BreadcrumbLink asChild>
-            <Link href="/">{t("home")}</Link>
+            <Link href="/">
+              {t("home")}
+            </Link>
           </BreadcrumbLink>
         </BreadcrumbItem>
 
-        {segments.map((segment, index) => {
-          const href = "/" + segments.slice(0, index + 1).join("/")
-          const isLast = index === segments.length - 1
+        {segments.map(
+          (segment, index) => {
+            const isLast =
+              index ===
+              segments.length - 1
 
-          const label =
-            segmentLabels[segment] ??
-            decodeURIComponent(segment)
-              .replace(/-/g, " ")
-              .replace(/\b\w/g, (char) => char.toUpperCase())
+            const href =
+              "/" +
+              segments
+                .slice(0, index + 1)
+                .join("/")
 
-          return (
-            <div key={href} className="flex items-center">
-              <BreadcrumbSeparator />
+            const label =
+              segmentLabels[
+                segment
+              ] ??
+              decodeURIComponent(
+                segment
+              )
+                .replace(/-/g, " ")
+                .replace(
+                  /\b\w/g,
+                  (char) =>
+                    char.toUpperCase()
+                )
 
-              <BreadcrumbItem>
-                {isLast ? (
-                  <BreadcrumbPage>{label}</BreadcrumbPage>
-                ) : (
-                  <BreadcrumbLink asChild>
-                    <Link href={href}>{label}</Link>
-                  </BreadcrumbLink>
-                )}
-              </BreadcrumbItem>
-            </div>
-          )
-        })}
+            return (
+              <div
+                key={`${href}-${index}`}
+                className="flex items-center"
+              >
+                <BreadcrumbSeparator />
+
+                <BreadcrumbItem>
+                  {isLast ? (
+                    <BreadcrumbPage>
+                      {label}
+                    </BreadcrumbPage>
+                  ) : (
+                    <BreadcrumbLink asChild>
+                      <Link href={href}>
+                        {label}
+                      </Link>
+                    </BreadcrumbLink>
+                  )}
+                </BreadcrumbItem>
+              </div>
+            )
+          }
+        )}
       </BreadcrumbList>
     </Breadcrumb>
   )
