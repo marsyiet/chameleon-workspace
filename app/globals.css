@@ -154,7 +154,7 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50 text-[13.5px];
+    @apply border-border outline-ring/50;
   }
 
   html {
@@ -180,4 +180,29 @@
   h4 {
     @apply text-base font-heading uppercase;
   }
+}
+
+
+@keyframes radar {
+  from {
+    transform: rotate(0deg);
+  }
+
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.radar-sweep {
+  border-radius: 9999px;
+
+  background:
+    conic-gradient(
+      from 0deg,
+      transparent,
+      rgba(16, 185, 129, 0.05),
+      rgba(16, 185, 129, 0.35)
+    );
+
+  animation: radar 4s linear infinite;
 }

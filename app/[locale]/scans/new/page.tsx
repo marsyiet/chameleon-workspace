@@ -48,9 +48,9 @@ export default function NewScan() {
       toast.success(
         "SCAN_CREATION_SUCCESS"
       )
-
+      console.log("RES", res)
       router.push(
-        `/scans/${res.data.id}?title=${encodeURIComponent(values.name)}`
+        `/scans/${res.data.id}`
       )
     } catch (error: any) {
       toast.error(

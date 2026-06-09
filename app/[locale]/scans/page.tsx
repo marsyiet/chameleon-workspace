@@ -17,13 +17,15 @@ export default function ScansPage() {
   }
 
   if (error) {
-    return <div>Error loading scans</div>
+    return <div>Error with scans</div>
   }
+
+  console.log(data)
 
   return (
     <DataTable
       columns={columns}
-      data={data.data.scans}
+      data={data?.data?.scans}
     />
   )
 }

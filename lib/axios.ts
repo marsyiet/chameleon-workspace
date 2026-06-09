@@ -6,7 +6,7 @@ export const api = axios.create({
   withCredentials: true,
 })
 
-
+console.log("API URL:", process.env.NEXT_PUBLIC_API_URL)
 
 api.interceptors.response.use(
   (response) => response,
