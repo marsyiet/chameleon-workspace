@@ -5,6 +5,7 @@ import { useScan } from "@/hooks/scans/use-scan"
 import PendingScanView from "../_components/pending-scan-view"
 import ScanResultsView from "./_components/scan-results-view"
 import { useAssets } from "@/hooks/assets/use-assets"
+import LoaderGlobal from "../_components/loader-global"
 
 export default function ScanPage() {
   const params = useParams()
@@ -18,7 +19,11 @@ export default function ScanPage() {
   })
   const assets = assetsData ?? []
 
-  if (scanLoading) return <div>Loading...</div>
+  if (scanLoading) return (
+    <div className="w-full h-full flex items-center justify-center">
+      <LoaderGlobal />
+    </div>
+  )
   if (!scan) return <div>Not found</div>
 
   if (scan.status === "pending" || scan.status === "running") {

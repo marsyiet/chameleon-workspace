@@ -37,10 +37,10 @@ function serviceIcon(service: string) {
 
 function cvssVariant(score: number | null) {
   if (score === null) return "bg-muted text-muted-foreground"
-  if (score >= 9) return "bg-red-100 text-red-900"
-  if (score >= 7) return "bg-red-50 text-red-800"
-  if (score >= 4) return "bg-amber-50 text-amber-800"
-  return "bg-green-50 text-green-800"
+  if (score >= 9) return "bg-red-100/10 text-red-900"
+  if (score >= 7) return "bg-red-50/10 text-destructive"
+  if (score >= 4) return "bg-amber-50/10 text-amber-800"
+  return "bg-green-50/10 text-green-800"
 }
 
 interface Props {
@@ -112,7 +112,7 @@ export function AssetRow({ asset }: Props) {
             <span className="
               inline-flex items-center gap-1 text-[11px] font-medium
               px-2 py-0.5 rounded-full
-              bg-red-50 text-red-800
+              bg-red-50/10 text-destructive
             ">
               <AlertTriangle className="w-3 h-3" />
               {highCves.length} CVE haute

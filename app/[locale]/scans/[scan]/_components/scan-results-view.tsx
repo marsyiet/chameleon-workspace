@@ -31,10 +31,10 @@ function formatDate(d: string | null): string {
 
 function statusPill(status: Scan["status"]) {
   const map = {
-    completed: "bg-green-50 text-green-800",
-    running:   "bg-blue-50 text-blue-800",
+    completed: "bg-green/50 text-green-800",
+    running:   "bg-blue/50 text-blue-800",
     pending:   "bg-secondary text-secondary-foreground",
-    failed:    "bg-red-50 text-red-800",
+    failed:    "bg-red/50 text-red-800",
   }
   return map[status] ?? map.pending
 }
@@ -85,7 +85,7 @@ export default function ScanResultsView({
   ]
 
   return (
-    <div className="w-full max-w-4xl mx-auto px-4 py-8 space-y-6">
+    <div className="w-full max-w-4xl mx-auto space-y-4">
 
       {/* Header */}
       <div className="flex items-start justify-between gap-4 flex-wrap">

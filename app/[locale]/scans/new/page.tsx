@@ -61,7 +61,7 @@ export default function NewScan() {
 
   return (
     <div className="space-y-4">
-      <h3>New scan campaign</h3>
+      <h3>New scan</h3>
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div className="lg:col-span-1">

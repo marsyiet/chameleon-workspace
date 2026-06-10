@@ -21,6 +21,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { Progress } from "@/components/ui/progress"
+import { cn } from "@/lib/utils"
 
 export interface ScanTarget {
   id: string
@@ -50,7 +52,7 @@ function StatusBadge({
     case "completed":
       return (
         <Badge variant="outline">
-          <CircleCheckIcon className="size-3.5 fill-green-500 text-green-500" />
+          <CircleCheckIcon className="size-6 fill-green-500 text-white" />
           Completed
         </Badge>
       )
@@ -58,7 +60,7 @@ function StatusBadge({
     case "running":
       return (
         <Badge variant="outline">
-          <LoaderIcon className="size-3.5 animate-spin" />
+          <LoaderIcon className="size-6 animate-spin" />
           Running
         </Badge>
       )
@@ -66,7 +68,7 @@ function StatusBadge({
     case "failed":
       return (
         <Badge variant="outline">
-          <XCircleIcon className="size-3.5 text-destructive" />
+          <XCircleIcon className="size-6 text-destructive" />
           Failed
         </Badge>
       )
@@ -74,7 +76,7 @@ function StatusBadge({
     default:
       return (
         <Badge variant="outline">
-          <Clock3Icon className="size-3.5" />
+          <Clock3Icon className="size-6" />
           Pending
         </Badge>
       )
@@ -166,14 +168,20 @@ export const columns: ColumnDef<Scan>[] = [
   {
     accessorKey: "assetsDiscovered",
     header: "Assets",
+    cell: ({ row }) => (
+      <span className={cn(row.original.assetsDiscovered > 0 ? "text-primary" : "text-red-500", "font-medium")}>
+        {row.original.assetsDiscovered}
+      </span>
+    ),
   },
 
   {
     accessorKey: "progress",
     header: "Progress",
     cell: ({ row }) => (
-      <span>
-        {row.original.progress}%
+      <span className="flex items-center">
+        <Progress value={row.original.progress} className="mr-2 shrink" />
+        <p className="text-xs text-muted-foreground">{row.original.progress}{"%"}</p>
       </span>
     ),
   },

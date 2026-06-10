@@ -213,14 +213,22 @@ export default function ConfigurationForm({
                 </div>
               ))}
             </div>
-
-            <Button
-              type="submit"
-              loading={isPending}
-              className="w-full"
-            >
-              Create Scan
-            </Button>
+            <div className="grid grid-cols-1 lg:grid-cols-2 mt-4 items-center relative w-full gap-4">
+              <Button
+                variant={"secondary"}
+                loading={isPending}
+                className="w-full"
+              >
+                Schedule Scan
+              </Button>
+              <Button
+                type="submit"
+                loading={isPending}
+                className="w-full"
+              >
+                Launch scan
+              </Button>
+            </div>
           </FieldGroup>
         </form>
       </CardContent>

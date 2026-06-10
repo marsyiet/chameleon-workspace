@@ -11,6 +11,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AppBreadcrumb } from "@/components/app-breadcrumb";
 import ReactQueryProvider from "@/providers/react-query-provider";
 import { Toaster } from "@/components/ui/sonner";
+import { ThemeProvider as NextThemesProvider } from "next-themes";
 
 type Props = {
   children: React.ReactNode;
@@ -46,6 +47,11 @@ export default async function RootLayout({ children, params }: Props) {
       suppressHydrationWarning
     >
       <ReactQueryProvider>
+        <NextThemesProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+          >
         <TooltipProvider>
           <body className="min-h-full flex flex-col">
             <NextIntlClientProvider locale={locale} messages={messages}>
@@ -53,11 +59,11 @@ export default async function RootLayout({ children, params }: Props) {
                 <AppSidebar />
 
                 <div className="w-full h-dvh relative">
-                  <nav className="flex w-full items-center gap-4 fixed top-0 p-2 bg-sidebar border-b backdrop-blur-sm">
+                  <nav className="flex w-full items-center gap-4 sticky top-0 p-2 bg-sidebar z-50 border-b">
                     <SidebarTrigger />
                     <AppBreadcrumb />
                   </nav>
-                  <div className="px-4 pt-16 pb-4" >
+                  <div className="px-4 h-full py-4" >
                     {children}
                     <Toaster />
                   </div>
@@ -67,6 +73,7 @@ export default async function RootLayout({ children, params }: Props) {
             </NextIntlClientProvider>
           </body>
         </TooltipProvider>
+        </NextThemesProvider>
       </ReactQueryProvider>
     </html >
   );
