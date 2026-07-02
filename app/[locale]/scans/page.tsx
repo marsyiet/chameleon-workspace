@@ -24,7 +24,13 @@ export default function ScansPage() {
 
   return (
     <div className="space-y-4">
-      <h3>Scans</h3>
+      <div className="flex items-center justify-between h-sm">
+        <h2 className="valenzka">Scans</h2>
+        <div>
+          <img src="" alt="" />
+        </div>
+      </div>
+      
       <DataTable
       columns={columns}
       data={scans}

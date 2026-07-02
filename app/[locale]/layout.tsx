@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Roboto } from "next/font/google";
+import { Open_Sans } from "next/font/google";
 import "../globals.css";
 import { cn } from "@/lib/utils";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
@@ -18,7 +18,7 @@ type Props = {
   params: Promise<{ locale: string }>;
 };
 
-const inter = Roboto({
+const inter = Open_Sans({
   subsets: ["latin"],
   variable: "--font-sans",
 });
@@ -40,8 +40,6 @@ export default async function RootLayout({ children, params }: Props) {
     <html
       className={cn(
         "h-full",
-        "antialiased",
-        "font-sans",
         inter.variable
       )}
       suppressHydrationWarning
@@ -63,7 +61,7 @@ export default async function RootLayout({ children, params }: Props) {
                     <SidebarTrigger />
                     <AppBreadcrumb />
                   </nav>
-                  <div className="px-4 h-full py-4" >
+                  <div className="h-full" >
                     {children}
                     <Toaster />
                   </div>

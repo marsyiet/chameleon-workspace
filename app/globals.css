@@ -51,6 +51,14 @@
   --color-card: var(--card);
   --color-card-foreground: var(--card-foreground);
 
+  /* Gradient stops exposés comme tokens Tailwind */
+  --color-gradient-from: var(--gradient-from);
+  --color-gradient-to: var(--gradient-to);
+
+  /* Tokens noir/blanc thème-adaptatifs */
+  --color-on-surface: var(--on-surface);
+  --color-on-surface-foreground: var(--on-surface-foreground);
+
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -70,7 +78,7 @@
   --popover: oklch(0.99 0.002 255);
   --popover-foreground: oklch(0.38 0.01 255);
 
-  --primary: oklch(0.62 0.18 135);
+  --primary: oklch(0.58 0.26 290);
   --primary-foreground: oklch(0.985 0 0);
 
   --secondary: oklch(0.94 0.003 255);
@@ -84,27 +92,36 @@
 
   --destructive: oklch(0.62 0.21 25);
 
-  --border: oklch(0.91 0.003 255);
-  --input: oklch(0.91 0.003 255);
+  --border: oklch(0.80 0.005 255);
+  --input: oklch(0.80 0.005 255);
 
-  --ring: oklch(0.62 0.18 135);
+  --ring: oklch(0.58 0.26 290);
 
-  --chart-1: oklch(0.62 0.18 135);
-  --chart-2: oklch(0.68 0.10 180);
-  --chart-3: oklch(0.72 0.14 320);
-  --chart-4: oklch(0.78 0.10 120);
+  /* Gradient violet → rose */
+  --gradient-from: oklch(0.58 0.26 290);
+  --gradient-to:   oklch(0.68 0.23 10);
+  --gradient-primary: linear-gradient(135deg, var(--gradient-from), var(--gradient-to));
+
+  /* Bouton surface : noir en light */
+  --on-surface: oklch(0.10 0.005 255);
+  --on-surface-foreground: oklch(0.985 0 0);
+
+  --chart-1: oklch(0.58 0.26 290);
+  --chart-2: oklch(0.68 0.23 10);
+  --chart-3: oklch(0.68 0.10 180);
+  --chart-4: oklch(0.72 0.14 320);
   --chart-5: oklch(0.70 0.12 30);
 
   --radius: 1rem;
 
   --sidebar: oklch(0.985 0.002 255);
   --sidebar-foreground: oklch(0.38 0.01 255);
-  --sidebar-primary: oklch(0.62 0.18 135);
+  --sidebar-primary: oklch(0.58 0.26 290);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.94 0.003 255);
   --sidebar-accent-foreground: oklch(0.38 0.01 255);
   --sidebar-border: oklch(0.80 0.005 255);
-  --sidebar-ring: oklch(0.62 0.18 135);
+  --sidebar-ring: oklch(0.58 0.26 290);
 }
 
 .dark {
@@ -117,7 +134,7 @@
   --popover: oklch(0.23 0.01 255);
   --popover-foreground: oklch(0.82 0.01 255);
 
-  --primary: oklch(0.70 0.20 135);
+  --primary: oklch(0.68 0.26 290);
   --primary-foreground: oklch(0.985 0 0);
 
   --secondary: oklch(0.27 0.01 255);
@@ -134,22 +151,31 @@
   --border: oklch(0.30 0.01 255);
   --input: oklch(0.30 0.01 255);
 
-  --ring: oklch(0.70 0.20 135);
+  --ring: oklch(0.68 0.26 290);
 
-  --chart-1: oklch(0.70 0.20 135);
-  --chart-2: oklch(0.68 0.12 180);
-  --chart-3: oklch(0.70 0.14 320);
-  --chart-4: oklch(0.70 0.10 120);
+  /* Gradient violet → rose (dark) */
+  --gradient-from: oklch(0.68 0.26 290);
+  --gradient-to:   oklch(0.74 0.24 10);
+  --gradient-primary: linear-gradient(135deg, var(--gradient-from), var(--gradient-to));
+
+  /* Bouton surface : blanc en dark */
+  --on-surface: oklch(0.985 0 0);
+  --on-surface-foreground: oklch(0.10 0.005 255);
+
+  --chart-1: oklch(0.68 0.26 290);
+  --chart-2: oklch(0.74 0.24 10);
+  --chart-3: oklch(0.68 0.12 180);
+  --chart-4: oklch(0.70 0.14 320);
   --chart-5: oklch(0.70 0.12 30);
 
   --sidebar: oklch(0.22 0.01 255);
   --sidebar-foreground: oklch(0.82 0.01 255);
-  --sidebar-primary: oklch(0.70 0.20 135);
+  --sidebar-primary: oklch(0.68 0.26 290);
   --sidebar-primary-foreground: oklch(0.985 0 0);
   --sidebar-accent: oklch(0.27 0.01 255);
   --sidebar-accent-foreground: oklch(0.82 0.01 255);
   --sidebar-border: oklch(0.42 0.01 255);
-  --sidebar-ring: oklch(0.70 0.20 135);
+  --sidebar-ring: oklch(0.68 0.26 290);
 }
 
 @layer base {
@@ -162,47 +188,87 @@
   }
 
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply bg-background text-foreground;
   }
 
+  /* Titres dashboard : compacts, uppercase */
   h1 {
-    @apply text-2xl font-heading font-semibold uppercase;
+    @apply text-5xl md:text-7xl font-black;
   }
-
   h2 {
-    @apply text-xl font-heading font-bold uppercase;
+    @apply text-3xl md:text-4xl font-bold;
   }
-
   h3 {
-    @apply text-lg font-heading font-bold uppercase;
+    @apply text-2xl md:text-3xl font-semibold;
   }
-
   h4 {
-    @apply text-base font-heading uppercase;
+    @apply text-xl md:text-2xl font-medium;
+  }
+  h5 {
+    @apply text-lg md:text-xl;
   }
 }
 
+/* ─── Utilitaires gradient ─────────────────────────────────────────────── */
+@layer utilities {
+  .bg-gradient-primary {
+    background: var(--gradient-primary);
+  }
 
+  .text-gradient-primary {
+    background: var(--gradient-primary);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    color: transparent;
+  }
+
+  .border-gradient-primary {
+    position: relative;
+    border: none;
+  }
+  .border-gradient-primary::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    padding: 1px;
+    background: var(--gradient-primary);
+    -webkit-mask:
+      linear-gradient(#fff 0 0) content-box,
+      linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+  }
+}
+
+/* ─── Valenzka ─────────────────────────────────────────────────────────── */
+@font-face {
+  font-family: "Valenzka";
+  src: url("/fonts/Valenzka.ttf") format("truetype");
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+.valenzka {
+  font-family: "Valenzka", sans-serif;
+}
+
+/* ─── Radar sweep (spécifique au workspace) ─────────────────────────────── */
 @keyframes radar {
-  from {
-    transform: rotate(0deg);
-  }
-
-  to {
-    transform: rotate(360deg);
-  }
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
 }
 
 .radar-sweep {
   border-radius: 9999px;
-
-  background:
-    conic-gradient(
-      from 0deg,
-      transparent,
-      rgba(16, 185, 129, 0.05),
-      rgba(16, 185, 129, 0.35)
-    );
-
+  background: conic-gradient(
+    from 0deg,
+    transparent,
+    rgba(16, 185, 129, 0.05),
+    rgba(16, 185, 129, 0.35)
+  );
   animation: radar 4s linear infinite;
 }

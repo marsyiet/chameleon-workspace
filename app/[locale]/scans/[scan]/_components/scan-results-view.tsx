@@ -1,16 +1,14 @@
 "use client"
 
 import { useState } from "react"
-import { Download, RefreshCw, Sparkles } from "lucide-react"
-import { Asset, Scan} from "@/app/[locale]/scans/_constants/data-types"
+import { Download, RefreshCw, Clock, Globe, Shield, Server, ChevronDown, Network, Database, Terminal, Cloud, Layers } from "lucide-react"
+import { Asset, Scan } from "@/app/[locale]/scans/_constants/data-types"
 import { AssetRow } from "./asset-row"
+import { Button } from "@/components/ui/button"
 
-type Filter = "all" | "cves" | "db" | "ssh"
+// ─── Helpers ────────────────────────────────────────────────────────────────
 
-function formatDuration(
-  start: string | null,
-  end: string | null
-): string {
+function formatDuration(start: string | null, end: string | null): string {
   if (!start || !end) return "—"
   const ms = new Date(end).getTime() - new Date(start).getTime()
   const s = Math.round(ms / 1000)
@@ -21,23 +19,197 @@ function formatDuration(
 function formatDate(d: string | null): string {
   if (!d) return "—"
   return new Date(d).toLocaleString("fr-FR", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-    hour: "2-digit",
-    minute: "2-digit",
+    day: "2-digit", month: "short", year: "numeric",
+    hour: "2-digit", minute: "2-digit",
   })
 }
 
-function statusPill(status: Scan["status"]) {
-  const map = {
-    completed: "bg-green/50 text-green-800",
-    running:   "bg-blue/50 text-blue-800",
-    pending:   "bg-secondary text-secondary-foreground",
-    failed:    "bg-red/50 text-red-800",
+// ─── Status badge ────────────────────────────────────────────────────────────
+
+function StatusBadge({ status }: { status: Scan["status"] }) {
+  const styles: Record<string, string> = {
+    completed: "bg-emerald-500/15 text-emerald-600 border-emerald-500/30 dark:text-emerald-400",
+    running:   "bg-blue-500/15 text-blue-600 border-blue-500/30 dark:text-blue-400",
+    pending:   "bg-secondary text-muted-foreground border-border",
+    failed:    "bg-red-500/15 text-red-600 border-red-500/30 dark:text-red-400",
   }
-  return map[status] ?? map.pending
+  const dots: Record<string, string> = {
+    completed: "bg-emerald-500",
+    running:   "bg-blue-500 animate-pulse",
+    pending:   "bg-muted-foreground",
+    failed:    "bg-red-500",
+  }
+  return (
+    <span className={`inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1 rounded-full border ${styles[status] ?? styles.pending}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${dots[status] ?? dots.pending}`} />
+      {status}
+    </span>
+  )
 }
+
+// ─── Catégorisation ──────────────────────────────────────────────────────────
+
+type CategoryKey = "naming" | "network" | "app" | "database" | "remote" | "cloud" | "other"
+
+interface Category {
+  key: CategoryKey
+  label: string
+  description: string
+  icon: React.ComponentType<{ className?: string }>
+  color: string
+  bg: string
+}
+
+const CATEGORIES: Category[] = [
+  {
+    key: "naming",
+    label: "Actifs de nommage",
+    description: "Domaines, sous-domaines, DNS",
+    icon: Globe,
+    color: "oklch(0.58 0.26 290)",
+    bg: "oklch(0.58 0.26 290 / 0.12)",
+  },
+  {
+    key: "network",
+    label: "Actifs réseau",
+    description: "Adresses IP, ports, services exposés",
+    icon: Network,
+    color: "oklch(0.55 0.22 240)",
+    bg: "oklch(0.55 0.22 240 / 0.12)",
+  },
+  {
+    key: "app",
+    label: "Actifs applicatifs",
+    description: "Web, API, interfaces d'administration",
+    icon: Layers,
+    color: "oklch(0.60 0.20 180)",
+    bg: "oklch(0.60 0.20 180 / 0.12)",
+  },
+  {
+    key: "database",
+    label: "Bases de données",
+    description: "MySQL, PostgreSQL, MongoDB...",
+    icon: Database,
+    color: "oklch(0.65 0.18 60)",
+    bg: "oklch(0.65 0.18 60 / 0.12)",
+  },
+  {
+    key: "remote",
+    label: "Accès distants",
+    description: "SSH, RDP, VPN exposés",
+    icon: Terminal,
+    color: "oklch(0.62 0.21 25)",
+    bg: "oklch(0.62 0.21 25 / 0.12)",
+  },
+  {
+    key: "cloud",
+    label: "Actifs cloud",
+    description: "Instances, buckets, fonctions",
+    icon: Cloud,
+    color: "oklch(0.60 0.18 310)",
+    bg: "oklch(0.60 0.18 310 / 0.12)",
+  },
+  {
+    key: "other",
+    label: "Autres",
+    description: "Actifs non classifiés",
+    icon: Server,
+    color: "var(--muted-foreground)",
+    bg: "var(--muted)",
+  },
+]
+
+function categorize(asset: Asset): CategoryKey {
+  const tags = asset.tags ?? []
+  const ports = asset.openPorts?.map((p: any) => p.port ?? p) ?? []
+
+  if (tags.some((t: string) => t.startsWith("database/"))) return "database"
+  if (tags.some((t: string) => ["remote/ssh", "remote/rdp", "remote/vnc"].includes(t))) return "remote"
+  if (tags.some((t: string) => t.startsWith("cloud/"))) return "cloud"
+  if (tags.some((t: string) => t.startsWith("web/") || t.startsWith("api/"))) return "app"
+  if (tags.some((t: string) => t.startsWith("dns/") || t.startsWith("domain/"))) return "naming"
+  if (ports.some((p: number) => [80, 443, 8080, 8443, 3000].includes(p))) return "app"
+  if (ports.some((p: number) => [22].includes(p))) return "remote"
+  if (ports.some((p: number) => [3306, 5432, 27017, 6379, 9200].includes(p))) return "database"
+  if (ports.length > 0) return "network"
+  return "naming"
+}
+
+// ─── Section catégorie ───────────────────────────────────────────────────────
+
+function CategorySection({
+  category,
+  assets,
+  defaultOpen = false,
+}: {
+  category: Category
+  assets: Asset[]
+  defaultOpen?: boolean
+}) {
+  const [open, setOpen] = useState(defaultOpen)
+  const Icon = category.icon
+  const criticalCount = assets.filter((a) =>
+    a.cves?.some((c: any) => c.cvss !== null && c.cvss >= 7)
+  ).length
+
+  if (assets.length === 0) return null
+
+  return (
+    <div className="rounded-xl border border-border overflow-hidden">
+      {/* En-tête de section */}
+      <button
+        onClick={() => setOpen(!open)}
+        className="w-full flex items-center gap-4 px-5 py-4 hover:bg-accent/50 transition-colors text-left"
+      >
+        {/* Icône */}
+        <div
+          className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl"
+          style={{ background: category.bg, color: category.color }}
+        >
+          <Icon className="h-5 w-5" />
+        </div>
+
+        {/* Texte */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <span className="font-semibold text-sm">{category.label}</span>
+            <span
+              className="text-xs font-medium px-2 py-0.5 rounded-full"
+              style={{ background: category.bg, color: category.color }}
+            >
+              {assets.length}
+            </span>
+            {criticalCount > 0 && (
+              <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-red-500/15 text-red-600 dark:text-red-400">
+                {criticalCount} CVE critique{criticalCount > 1 ? "s" : ""}
+              </span>
+            )}
+          </div>
+          <p className="text-xs text-muted-foreground mt-0.5">{category.description}</p>
+        </div>
+
+        {/* Chevron */}
+        <ChevronDown
+          className="h-4 w-4 text-muted-foreground shrink-0 transition-transform duration-200"
+          style={{ transform: open ? "rotate(180deg)" : "rotate(0deg)" }}
+        />
+      </button>
+
+      {/* Liste des assets */}
+      {open && (
+        <div className="border-t border-border divide-y divide-border">
+          {assets.map((asset) => (
+            <div key={asset._id} className="px-5 py-2">
+              <AssetRow asset={asset} />
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Vue principale ──────────────────────────────────────────────────────────
 
 interface Props {
   scan: Scan
@@ -45,175 +217,108 @@ interface Props {
   onRestart?: () => void
 }
 
-export default function ScanResultsView({
-  scan,
-  assets,
-  onRestart,
-}: Props) {
-  const [filter, setFilter] = useState<Filter>("all")
+export default function ScanResultsView({ scan, assets, onRestart }: Props) {
+  const totalPorts  = assets.reduce((acc, a) => acc + (a.openPorts?.length ?? 0), 0)
+  const allCves     = assets.flatMap((a) => a.cves ?? [])
+  const highCves    = allCves.filter((c: any) => c.cvss !== null && c.cvss >= 7).length
+  const duration    = formatDuration(scan.startedAt, scan.completedAt)
+  const targetsLabel = scan.targets.map((t: any) => t.target).join(", ")
 
-  const totalPorts = assets.reduce(
-    (acc, a) => acc + a.openPorts.length, 0
-  )
-  const allCves = assets.flatMap((a) => a.cves)
-  const highCves = allCves.filter(
-    (c) => c.cvss !== null && c.cvss >= 7
-  ).length
-  const duration = formatDuration(
-    scan.startedAt,
-    scan.completedAt
-  )
-  const targetsLabel = scan.targets
-    .map((t) => t.target)
-    .join(", ")
+  // Grouper par catégorie
+  const grouped = assets.reduce<Record<CategoryKey, Asset[]>>((acc, asset) => {
+    const key = categorize(asset)
+    acc[key] = [...(acc[key] ?? []), asset]
+    return acc
+  }, {} as Record<CategoryKey, Asset[]>)
 
-  const filtered = assets.filter((a) => {
-    if (filter === "cves")
-      return a.cves.some((c:any) => c.cvss !== null && c.cvss >= 7)
-    if (filter === "db")
-      return a.tags.some((t:any) => t.startsWith("database/"))
-    if (filter === "ssh")
-      return a.tags.includes("remote/ssh")
-    return true
-  })
-
-  const FILTERS: { key: Filter; label: string }[] = [
-    { key: "all",  label: `Tous (${assets.length})` },
-    { key: "cves", label: "CVEs critiques" },
-    { key: "db",   label: "Bases de données" },
-    { key: "ssh",  label: "SSH exposé" },
+  const metrics = [
+    { label: "Assets",       value: assets.length, icon: Globe,   danger: false },
+    { label: "Ports ouverts", value: totalPorts,   icon: Server,  danger: false },
+    { label: "CVEs ≥ 7.0",   value: highCves,      icon: Shield,  danger: true  },
+    { label: "Durée",         value: duration,      icon: Clock,   danger: false },
   ]
 
   return (
-    <div className="w-full max-w-4xl mx-auto space-y-4">
+    <div className="w-full mx-auto space-y-6">
 
-      {/* Header */}
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <div className="flex items-center gap-3 mb-1.5">
-            <h1 className="text-lg font-medium">
-              {scan.name}
-            </h1>
-            <span
-              className={`
-                text-xs font-medium px-2.5 py-0.5 rounded-full
-                ${statusPill(scan.status)}
-              `}
-            >
-              {scan.status}
-            </span>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            {targetsLabel}
-            {" · "}
-            {scan.scanType} scan
-            {" · "}
-            durée {duration}
-          </p>
+      {/* ── Header ── */}
+      <div className="relative rounded-2xl overflow-hidden px-6 py-8 min-h-[180px]">
+        <img src="/images/hero.png" alt="" className="absolute inset-0 h-full w-full object-cover" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20" />
+        <div className="absolute inset-0 opacity-20" style={{ background: "var(--gradient-primary)" }} />
+        <div className="absolute right-8 top-0 bottom-0 flex items-center select-none pointer-events-none">
+          <span className="text-[140px] opacity-40 drop-shadow-2xl">🦎</span>
         </div>
-        <div className="flex gap-2">
-          <button
-            className="
-              inline-flex items-center gap-1.5 text-sm
-              px-3 py-1.5 rounded-lg border border-border
-              hover:bg-secondary transition-colors
-            "
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            Analyser
-          </button>
-          {onRestart && (
-            <button
-              onClick={onRestart}
-              className="
-                inline-flex items-center gap-1.5 text-sm
-                px-3 py-1.5 rounded-lg border border-border
-                hover:bg-secondary transition-colors
-              "
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              Relancer
-            </button>
-          )}
+        <div className="relative flex items-start justify-between gap-4 flex-wrap">
+          <div className="space-y-3">
+            <StatusBadge status={scan.status} />
+            <h2 className="valenzka text-white text-3xl leading-tight">{scan.name}</h2>
+            <p className="text-sm text-white/70 flex items-center gap-2 flex-wrap">
+              <span>{targetsLabel}</span>
+              <span className="text-white/40">·</span>
+              <span className="capitalize">{scan.scanType} scan</span>
+              <span className="text-white/40">·</span>
+              <span>Durée {duration}</span>
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Metrics */}
+      {/* ── Métriques ── */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-        {[
-          { label: "Assets", value: assets.length, danger: false },
-          { label: "Ports ouverts", value: totalPorts, danger: false },
-          { label: "CVEs ≥ 7.0", value: highCves, danger: true },
-          { label: "Durée", value: duration, danger: false },
-        ].map((m) => (
-          <div
-            key={m.label}
-            className="bg-secondary rounded-lg p-4"
-          >
-            <p className="text-xs text-muted-foreground mb-1">
-              {m.label}
-            </p>
-            <p
-              className={`
-                text-2xl font-medium
-                ${m.danger && Number(m.value) > 0
-                  ? "text-destructive"
-                  : "text-foreground"}
-              `}
-            >
-              {m.value}
-            </p>
-          </div>
+        {metrics.map((m) => {
+          const Icon = m.icon
+          const isDanger = m.danger && Number(m.value) > 0
+          return (
+            <div key={m.label} className="bg-card border border-border rounded-xl p-4 space-y-3">
+              <div className="flex items-center justify-between">
+                <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">{m.label}</p>
+                <div
+                  className="flex h-7 w-7 items-center justify-center rounded-lg"
+                  style={{
+                    background: isDanger ? "oklch(0.62 0.21 25 / 0.15)" : "color-mix(in oklch, var(--gradient-from) 15%, transparent)",
+                  }}
+                >
+                  <Icon className="h-3.5 w-3.5" style={{ color: isDanger ? "oklch(0.62 0.21 25)" : "var(--gradient-from)" }} />
+                </div>
+              </div>
+              <p className="text-3xl font-bold" style={{ color: isDanger ? "oklch(0.62 0.21 25)" : "var(--foreground)" }}>
+                {m.value}
+              </p>
+            </div>
+          )
+        })}
+      </div>
+
+      {/* ── Assets par catégorie ── */}
+      <div className="space-y-3">
+        {CATEGORIES.map((cat, i) => (
+          <CategorySection
+            key={cat.key}
+            category={cat}
+            assets={grouped[cat.key] ?? []}
+            defaultOpen={i === 0}
+          />
         ))}
       </div>
 
-      {/* Filters */}
-      <div className="flex gap-2 flex-wrap">
-        {FILTERS.map((f) => (
-          <button
-            key={f.key}
-            onClick={() => setFilter(f.key)}
-            className={`
-              text-xs px-3 py-1.5 rounded-lg border transition-colors
-              ${filter === f.key
-                ? "bg-secondary border-border text-foreground"
-                : "border-border text-muted-foreground hover:bg-secondary"}
-            `}
-          >
-            {f.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Asset list */}
-      <div className="space-y-2">
-        {filtered.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-4">
-            Aucun asset dans ce filtre.
-          </p>
-        ) : (
-          filtered.map((asset) => (
-            <AssetRow key={asset._id} asset={asset} />
-          ))
-        )}
-      </div>
-
-      {/* Footer */}
-      <div className="
-        flex items-center justify-between pt-4
-        border-t border-border
-      ">
-        <p className="text-xs text-muted-foreground">
+      {/* ── Footer ── */}
+      <div className="flex items-center justify-between pt-4 border-t border-border">
+        <p className="text-sm text-muted-foreground">
           Terminé le {formatDate(scan.completedAt)}
         </p>
-        <button className="
-          inline-flex items-center gap-1.5 text-xs
-          px-3 py-1.5 rounded-lg border border-border
-          hover:bg-secondary transition-colors
-        ">
-          <Download className="w-3.5 h-3.5" />
-          Exporter
-        </button>
+        <div className="flex items-center gap-2">
+          {onRestart && (
+            <Button variant="outline" size="sm" onClick={onRestart}>
+              <RefreshCw className="h-3.5 w-3.5" />
+              Relancer
+            </Button>
+          )}
+          <Button variant="outline" size="sm">
+            <Download className="h-3.5 w-3.5" />
+            Exporter
+          </Button>
+        </div>
       </div>
     </div>
   )

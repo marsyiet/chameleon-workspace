@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/sidebar"
 
 import { data } from "@/constants/sidebar-links"
-import { NavCampaigns } from "./nav-campaigns"
 import { NavAdministration } from "./nav-administraion"
 
 export function AppSidebar(
@@ -31,7 +30,6 @@ export function AppSidebar(
 
       <SidebarContent>
         <NavMain items={sidebarData.navMain} />
-        <NavCampaigns campaigns={sidebarData.campaigns} />
         <NavAdministration items={sidebarData.administration} />
       </SidebarContent>
 
