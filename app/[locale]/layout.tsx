@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Open_Sans } from "next/font/google";
+import { Manrope } from "next/font/google";
 import "../globals.css";
 import { cn } from "@/lib/utils";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
@@ -18,7 +18,7 @@ type Props = {
   params: Promise<{ locale: string }>;
 };
 
-const inter = Open_Sans({
+const inter = Manrope({
   subsets: ["latin"],
   variable: "--font-sans",
 });
@@ -61,7 +61,7 @@ export default async function RootLayout({ children, params }: Props) {
                     <SidebarTrigger />
                     <AppBreadcrumb />
                   </nav>
-                  <div className="h-full" >
+                  <div className="h-full p-4" >
                     {children}
                     <Toaster />
                   </div>

@@ -21,8 +21,8 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Progress } from "@/components/ui/progress"
 import { cn } from "@/lib/utils"
+import { ProgressBar } from "@/components/custom/progress-bar"
 
 export interface ScanTarget {
   id: string
@@ -169,7 +169,7 @@ export const columns: ColumnDef<Scan>[] = [
     accessorKey: "assetsDiscovered",
     header: "Assets",
     cell: ({ row }) => (
-      <span className={cn(row.original.assetsDiscovered > 0 ? "text-primary" : "text-red-500", "font-medium")}>
+      <span className={cn(row.original.assetsDiscovered > 0 ? "text-foreground" : "text-red-500", "font-medium")}>
         {row.original.assetsDiscovered}
       </span>
     ),
@@ -179,9 +179,8 @@ export const columns: ColumnDef<Scan>[] = [
     accessorKey: "progress",
     header: "Progress",
     cell: ({ row }) => (
-      <span className="flex items-center">
-        <Progress value={row.original.progress} className="mr-2 shrink" />
-        <p className="text-xs text-muted-foreground">{row.original.progress}{"%"}</p>
+      <span className="flex items-center w-40">
+        <ProgressBar value={row.original.progress} className="mr-2 shrink-0" showLabel height="h-3" />
       </span>
     ),
   },
@@ -190,9 +189,11 @@ export const columns: ColumnDef<Scan>[] = [
     accessorKey: "createdAt",
     header: "Created",
     cell: ({ row }) =>
-      new Date(
-        row.original.createdAt
-      ).toLocaleDateString(),
+      <p className="text-xs text-muted-foreground">
+        {new Date(
+          row.original.createdAt
+        ).toLocaleDateString()}
+      </p>
   },
 
   {
