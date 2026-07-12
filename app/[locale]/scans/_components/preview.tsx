@@ -68,8 +68,8 @@ export default function Preview({ form }: PreviewProps) {
   return (
     <div className="sticky top-4">
       <CardHeader className="pb-4">
-        <CardTitle className="text-base">
-          {name || "New Scan"}
+        <CardTitle>
+          <h4 className="text-primary">{name || "New Scan"}</h4>
         </CardTitle>
         <CardDescription className="text-xs">
           Real-time scan overview

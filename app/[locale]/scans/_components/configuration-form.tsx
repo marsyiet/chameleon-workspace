@@ -1,7 +1,9 @@
 "use client"
 
+import { useState } from "react"
 import { Controller, useFieldArray, UseFormReturn } from "react-hook-form"
-import { PlusIcon, TrashIcon } from "lucide-react"
+import { PlusIcon, TrashIcon, CalendarIcon } from "lucide-react"
+import { format } from "date-fns"
 
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -15,6 +17,12 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover"
+import { Calendar } from "@/components/ui/calendar"
 
 import { CreateScanFormValues } from "../_validators/create-scan-schema"
 
@@ -35,6 +43,32 @@ export default function ConfigurationForm({
     control: form.control,
     name: "targets",
   })
+
+  const [scheduleOpen, setScheduleOpen] = useState(false)
+  const [pendingDate, setPendingDate] = useState<Date | undefined>(
+    undefined
+  )
+  const [pendingTime, setPendingTime] = useState("09:00")
+
+  const confirmSchedule = () => {
+    if (!pendingDate) return
+
+    const [hours, minutes] = pendingTime.split(":").map(Number)
+    const scheduledAt = new Date(pendingDate)
+    scheduledAt.setHours(hours, minutes, 0, 0)
+
+    form.setValue("scheduledAt", scheduledAt, {
+      shouldValidate: true,
+    })
+
+    setScheduleOpen(false)
+    form.handleSubmit(onSubmit)()
+  }
+
+  const launchNow = () => {
+    form.setValue("scheduledAt", null)
+    form.handleSubmit(onSubmit)()
+  }
 
   return (
     <Card>
@@ -213,18 +247,63 @@ export default function ConfigurationForm({
                 </div>
               ))}
             </div>
+
             <div className="grid grid-cols-1 lg:grid-cols-2 mt-4 items-center relative w-full gap-4">
-              <Button
-                variant={"secondary"}
-                loading={isPending}
-                className="w-full"
+              <Popover
+                open={scheduleOpen}
+                onOpenChange={setScheduleOpen}
               >
-                Schedule Scan
-              </Button>
+                <PopoverTrigger asChild>
+                  <Button
+                    type="button"
+                    variant={"secondary"}
+                    loading={isPending}
+                    className="w-full"
+                  >
+                    <CalendarIcon className="size-4" />
+                    Schedule Scan
+                  </Button>
+                </PopoverTrigger>
+
+                <PopoverContent
+                  className="w-auto p-3 space-y-3"
+                  align="center"
+                >
+                  <Calendar
+                    mode="single"
+                    selected={pendingDate}
+                    onSelect={setPendingDate}
+                    disabled={(date) =>
+                      date < new Date(new Date().setHours(0, 0, 0, 0))
+                    }
+                  />
+
+                  <Input
+                    type="time"
+                    value={pendingTime}
+                    onChange={(e) => setPendingTime(e.target.value)}
+                  />
+
+                  <Button
+                    type="button"
+                    className="w-full"
+                    disabled={!pendingDate}
+                    onClick={confirmSchedule}
+                  >
+                    Confirm{" "}
+                    {pendingDate
+                      ? format(pendingDate, "PPP") +
+                        ` à ${pendingTime}`
+                      : ""}
+                  </Button>
+                </PopoverContent>
+              </Popover>
+
               <Button
-                type="submit"
+                type="button"
                 loading={isPending}
                 className="w-full"
+                onClick={launchNow}
               >
                 Launch scan
               </Button>

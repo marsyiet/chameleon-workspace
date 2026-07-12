@@ -61,7 +61,7 @@ export default async function RootLayout({ children, params }: Props) {
                     <SidebarTrigger />
                     <AppBreadcrumb />
                   </nav>
-                  <div className="h-full p-4" >
+                  <div className="h-full px-4 pt-4 pb-8" >
                     {children}
                     <Toaster />
                   </div>

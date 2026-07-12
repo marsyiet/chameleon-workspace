@@ -3,16 +3,21 @@ import {
   RadarIcon,
   ServerIcon,
   NetworkIcon,
-  CpuIcon,
   ShieldCheckIcon,
-  GlobeIcon,
   SearchIcon,
   UsersIcon,
   ClipboardListIcon,
   Settings2Icon,
   KeyRoundIcon,
+  MapIcon,
+  BugIcon,
+  FileBarChart2Icon,
+  ShieldAlertIcon,
+  Share2Icon,
+  WorkflowIcon,
+  EyeIcon,
+  BellIcon,
 } from "lucide-react"
-
 export const data = () => {
   return {
     user: {
@@ -20,7 +25,6 @@ export const data = () => {
       email: "admin@chameleon.io",
       avatar: "/globe.svg",
     },
-
     teams: [
       {
         name: "Chameleon",
@@ -28,22 +32,19 @@ export const data = () => {
         plan: "Enterprise",
       },
     ],
-
     navMain: [
       {
         title: "Search",
         url: "/search",
         icon: <SearchIcon />,
       },
-
       {
         title: "Dashboard",
         url: "/",
         icon: <LayoutDashboardIcon />,
       },
-
       {
-        title: "Discovery",
+        title: "Cartographie",
         url: "/scans",
         icon: <RadarIcon />,
         items: [
@@ -59,66 +60,51 @@ export const data = () => {
             title: "Scheduled Scans",
             url: "/scans/scheduled",
           },
+          {
+            title: "Inventaire",
+            url: "/scans/inventory",
+          },
         ],
       },
-
       {
-        title: "Assets",
-        url: "/assets",
-        icon: <ServerIcon />,
+        title: "Surveillance",
+        url: "/surveillance",
+        icon: <EyeIcon />,
         items: [
           {
-            title: "All Assets",
-            url: "/assets",
+            title: "Threat Intelligence",
+            url: "/threat-intel",
           },
           {
-            title: "IP Addresses",
-            url: "/assets/ip-addresses",
-          },
-          {
-            title: "Domains",
-            url: "/assets/domains",
-          },
-          {
-            title: "Hosts",
-            url: "/assets/hosts",
+            title: "Alertes & Changements",
+            url: "/surveillance/alerts",
           },
         ],
       },
-
       {
-        title: "Services",
-        url: "/services",
-        icon: <NetworkIcon />,
+        title: "Gestion des risques",
+        url: "/risk",
+        icon: <ShieldAlertIcon />,
         items: [
           {
-            title: "Open Ports",
-            url: "/services/ports",
+            title: "Vulnerabilities",
+            url: "/vulnerabilities",
           },
           {
-            title: "Detected Services",
-            url: "/services",
+            title: "Reports",
+            url: "/reports",
           },
           {
-            title: "HTTP Services",
-            url: "/services/http",
+            title: "Remediation",
+            url: "/remediation",
+          },
+          {
+            title: "Firewall Integrations",
+            url: "/integrations/firewall",
           },
         ],
-      },
-
-      {
-        title: "Technologies",
-        url: "/technologies",
-        icon: <CpuIcon />,
-      },
-
-      {
-        title: "Attack Surface",
-        url: "/attack-surface",
-        icon: <GlobeIcon />,
       },
     ],
-
     campaigns: [
       {
         name: "External Attack Surface",
@@ -136,32 +122,27 @@ export const data = () => {
         icon: <ServerIcon />,
       },
     ],
-
     administration: [
       {
         name: "Users",
         url: "/users",
         icon: <UsersIcon />,
       },
-
       {
         name: "Roles",
         url: "/roles",
         icon: <KeyRoundIcon />,
       },
-
       {
         name: "Audit Logs",
         url: "/audit-logs",
         icon: <ClipboardListIcon />,
       },
-
       {
         name: "Settings",
         url: "/settings",
         icon: <Settings2Icon />,
       },
     ],
-
   }
 }

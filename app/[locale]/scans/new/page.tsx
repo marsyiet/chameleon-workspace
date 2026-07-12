@@ -2,32 +2,26 @@
 
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
-
 import ConfigurationForm from "../_components/configuration-form"
 import Preview from "../_components/preview"
-
 import {
   createScanSchema,
   CreateScanFormValues,
 } from "../_validators/create-scan-schema"
-
 import { useRouter } from "next/navigation"
-
 import { useCreateScan } from "@/hooks/scans/use-create-scan"
 import { toast } from "sonner"
 
 export default function NewScan() {
-
   const router = useRouter()
-
   const createScanMutation = useCreateScan()
-
   const form = useForm<CreateScanFormValues>({
     resolver: zodResolver(createScanSchema),
     defaultValues: {
       name: "",
       description: "",
       scanType: "full",
+      scheduledAt: null,
       targets: [
         {
           target: "",
@@ -36,7 +30,6 @@ export default function NewScan() {
       ],
     },
   })
-
   const onSubmit = async (
     values: CreateScanFormValues
   ) => {
@@ -44,7 +37,6 @@ export default function NewScan() {
       const res = await createScanMutation.mutateAsync(
         values
       )
-
       toast.success(
         "SCAN_CREATION_SUCCESS"
       )
@@ -58,11 +50,9 @@ export default function NewScan() {
       )
     }
   }
-
   return (
     <div className="space-y-4">
-      <h3>New scan</h3>
-
+      <h3 className="valenzka">New scan</h3>
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
         <div className="lg:col-span-1">
           <ConfigurationForm
@@ -71,7 +61,6 @@ export default function NewScan() {
             isPending={createScanMutation.isPending}
           />
         </div>
-
         <div className="lg:col-span-2">
           <Preview form={form} />
         </div>

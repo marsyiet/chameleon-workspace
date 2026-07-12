@@ -1,22 +1,26 @@
 import { z } from "zod"
-
 export const createScanSchema = z.object({
   name: z
     .string()
     .min(3)
     .max(100),
-
   description: z
     .string()
     .max(500)
     .optional(),
-
   scanType: z.enum([
     "network",
     "web",
     "full",
   ]),
-
+  scheduledAt: z
+    .date()
+    .nullable()
+    .optional()
+    .refine(
+      (date) => !date || date > new Date(),
+      { message: "La date programmée doit être dans le futur" }
+    ),
   targets: z
     .array(
       z.object({
@@ -30,7 +34,6 @@ export const createScanSchema = z.object({
     )
     .min(1),
 })
-
 export type CreateScanFormValues =
   z.infer<
     typeof createScanSchema
