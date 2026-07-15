@@ -2,7 +2,7 @@
 
 import ScheduledScanCard from "./_components/scheduled-scan-card"
 import LoaderGlobal from "../_components/loader-global"
-import { useScheduledScans } from "@/hooks/scans/use-scheduled-sans"
+import { useScheduledScans } from "@/hooks/scans/use-scheduled-scans"
 
 export default function ScheduledScansPage() {
   const { data, isLoading, error } = useScheduledScans()

@@ -6,7 +6,7 @@ import { CalendarClock, Network, Globe, Shield } from "lucide-react"
 
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { ScheduledScan } from "@/hooks/scans/use-scheduled-sans"
+import { ScheduledScan } from "@/hooks/scans/use-scheduled-scans"
 
 
 const SCAN_TYPE_ICON = {

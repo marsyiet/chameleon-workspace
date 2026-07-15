@@ -1,4 +1,5 @@
 import { z } from "zod"
+
 export const createScanSchema = z.object({
   name: z
     .string()
@@ -13,6 +14,12 @@ export const createScanSchema = z.object({
     "web",
     "full",
   ]),
+  // Structure auditée par ce scan (ex: "MINFI") — texte libre, optionnel.
+  // Se propage à tous les actifs découverts (voir chapitre 2, §2.1.4).
+  targetOrganization: z
+    .string()
+    .max(100)
+    .optional(),
   scheduledAt: z
     .date()
     .nullable()
@@ -34,6 +41,7 @@ export const createScanSchema = z.object({
     )
     .min(1),
 })
+
 export type CreateScanFormValues =
   z.infer<
     typeof createScanSchema

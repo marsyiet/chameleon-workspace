@@ -120,6 +120,27 @@ export default function ConfigurationForm({
             />
 
             <Controller
+              name="targetOrganization"
+              control={form.control}
+              render={({ field, fieldState }) => (
+                <Field data-invalid={fieldState.invalid}>
+                  <FieldLabel>Structure concernée (optionnel)</FieldLabel>
+
+                  <Input
+                    {...field}
+                    value={field.value ?? ""}
+                    placeholder="MINFI"
+                    aria-invalid={fieldState.invalid}
+                  />
+
+                  {fieldState.invalid && (
+                    <FieldError errors={[fieldState.error]} />
+                  )}
+                </Field>
+              )}
+            />
+
+            <Controller
               name="scanType"
               control={form.control}
               render={({ field, fieldState }) => (
