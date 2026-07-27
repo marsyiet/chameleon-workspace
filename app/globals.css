@@ -269,8 +269,8 @@
   background: conic-gradient(
     from 0deg,
     transparent,
-    rgba(16, 185, 129, 0.02),
-    rgba(16, 185, 129, 0.15) /* CORRECTION : Légèrement atténué pour le mode clair */
+    color-mix(in oklch, var(--primary) 15%, transparent),
+    color-mix(in oklch, var(--primary) 35%, transparent)
   );
   animation: radar 4s linear infinite;
 }

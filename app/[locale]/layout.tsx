@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Nunito_Sans } from "next/font/google";
+import { Plus_Jakarta_Sans } from "next/font/google";
 import "../globals.css";
 import { cn } from "@/lib/utils";
 import { hasLocale, NextIntlClientProvider } from "next-intl";
@@ -18,7 +18,7 @@ type Props = {
   params: Promise<{ locale: string }>;
 };
 
-const inter = Nunito_Sans({
+const inter = Plus_Jakarta_Sans({
   subsets: ["latin"],
   variable: "--font-sans",
 });

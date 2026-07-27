@@ -25,28 +25,9 @@ export default function ScansPage() {
   return (
     <div className="space-y-4">
       {/* ── Header ── */}
-      <div className="relative rounded-2xl overflow-hidden px-6 py-8 min-h-[80px] border border-border bg-card">
-        <div className="absolute inset-0
-    bg-gradient-to-t
-    from-white via-slate-100/70 to-slate-50/20
-    dark:from-black/90
-    dark:via-black/40
-    dark:to-black/20
-  " />
-
-        <div
-          className="absolute inset-0 opacity-10 dark:opacity-20"
-          style={{ background: "var(--gradient-primary)" }}
-        />
-
-        <div className="relative flex items-start justify-between gap-4 flex-wrap">
-          <div>
-            <h3 className=" text-foreground dark:text-white">
-              Tous les scans
-            </h3>
-          </div>
-        </div>
-      </div>
+      <h3 className=" text-foreground dark:text-white">
+        Tous les scans
+      </h3>
 
       <DataTable
         columns={columns}

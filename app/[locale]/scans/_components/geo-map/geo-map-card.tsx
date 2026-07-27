@@ -12,27 +12,17 @@ import { useOrganizationSites } from "@/hooks/use-organization-sites"
 import MapView from "./map-view"
 import AssetDetailPanel from "./asset-detail-panel"
 import { MapPoint } from "./types"
+import { Asset } from "@/app/[locale]/scans/_constants/data-types"
 
 interface GeoMapCardProps {
   className?: string
+  // Si fourni : mode "scan" — carte scopée à ces actifs uniquement, pas d'onglets.
+  // Si absent : mode "global" — vue nationale/organisationnelle via les hooks.
+  assets?: Asset[]
 }
 
-export default function GeoMapCard({ className }: GeoMapCardProps) {
-  const [selectedPoint, setSelectedPoint] = useState<MapPoint | null>(null)
-  const [activeTab, setActiveTab] = useState<"overview" | "organizational">("overview")
-  const [tilesFailed, setTilesFailed] = useState(false)
-
-  const { data: assets } = useInventoryAssets()
-  const { data: orgSitesData } = useOrganizationSites()
-
-  const assetsArray = Array.isArray(assets) ? assets : []
-
-  const cardTitle =
-    activeTab === "organizational"
-      ? `Carte des actifs — ${(orgSitesData?.organization.name ?? "").toUpperCase()}`
-      : "Carte des actifs — Cameroun"
-
-  const overviewPoints: MapPoint[] = assetsArray
+function toOverviewPoints(assets: Asset[]): MapPoint[] {
+  return assets
     .filter(
       (a) =>
         a.exposure === "externe" &&
@@ -50,6 +40,30 @@ export default function GeoMapCard({ className }: GeoMapCardProps) {
       assetType: a.assetType,
       severity: a.severity,
     }))
+}
+
+export default function GeoMapCard({ className, assets: assetsProp }: GeoMapCardProps) {
+  const isScanScoped = assetsProp !== undefined
+
+  const [selectedPoint, setSelectedPoint] = useState<MapPoint | null>(null)
+  const [activeTab, setActiveTab] = useState<"overview" | "organizational">("overview")
+  const [tilesFailed, setTilesFailed] = useState(false)
+
+  // Hooks globaux : n'ont d'effet utile qu'en mode global, mais on les appelle
+  // inconditionnellement (règle des Hooks React) — `enabled` les neutralise
+  // en mode scan pour éviter une requête inutile.
+  const { data: globalAssets } = useInventoryAssets({ enabled: !isScanScoped })
+  const { data: orgSitesData } = useOrganizationSites()
+
+  const globalAssetsArray = Array.isArray(globalAssets) ? globalAssets : []
+
+  const cardTitle = isScanScoped
+    ? "Carte des actifs de ce scan"
+    : activeTab === "organizational"
+      ? `Carte des actifs — ${(orgSitesData?.organization.name ?? "").toUpperCase()}`
+      : "Carte des actifs — Cameroun"
+
+  const overviewPoints: MapPoint[] = toOverviewPoints(isScanScoped ? assetsProp! : globalAssetsArray)
 
   const organizationalPoints: MapPoint[] = (orgSitesData?.sites ?? [])
     .filter((site) => site.lat !== null && site.lon !== null)
@@ -62,7 +76,12 @@ export default function GeoMapCard({ className }: GeoMapCardProps) {
       assetCount: site.assetCount,
     }))
 
-  const points = activeTab === "overview" ? overviewPoints : organizationalPoints
+  const points = isScanScoped
+    ? overviewPoints
+    : activeTab === "overview"
+      ? overviewPoints
+      : organizationalPoints
+
   const isEmpty = points.length === 0
 
   return (
@@ -70,18 +89,21 @@ export default function GeoMapCard({ className }: GeoMapCardProps) {
       <CardHeader className="pb-2">
         <div className="flex items-center justify-between gap-2 flex-wrap">
           <h5 className="text-foreground transition-all duration-200">{cardTitle}</h5>
-          <Tabs
-            value={activeTab}
-            onValueChange={(v) => {
-              setActiveTab(v as typeof activeTab)
-              setSelectedPoint(null)
-            }}
-          >
-            <TabsList>
-              <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
-              <TabsTrigger value="organizational">Organisationnelle</TabsTrigger>
-            </TabsList>
-          </Tabs>
+
+          {!isScanScoped && (
+            <Tabs
+              value={activeTab}
+              onValueChange={(v) => {
+                setActiveTab(v as typeof activeTab)
+                setSelectedPoint(null)
+              }}
+            >
+              <TabsList>
+                <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
+                <TabsTrigger value="organizational">Organisationnelle</TabsTrigger>
+              </TabsList>
+            </Tabs>
+          )}
         </div>
       </CardHeader>
 
@@ -108,9 +130,11 @@ export default function GeoMapCard({ className }: GeoMapCardProps) {
                 Aucune donnée à afficher
               </p>
               <p className="text-[10px] text-muted-foreground leading-relaxed">
-                {activeTab === "overview"
-                  ? "Aucun actif externe géolocalisé pour le moment."
-                  : "Aucun site déclaré pour votre organisation."}
+                {isScanScoped
+                  ? "Aucun actif externe géolocalisé pour ce scan."
+                  : activeTab === "overview"
+                    ? "Aucun actif externe géolocalisé pour le moment."
+                    : "Aucun site déclaré pour votre organisation."}
               </p>
             </div>
           </div>
@@ -121,9 +145,11 @@ export default function GeoMapCard({ className }: GeoMapCardProps) {
 
       <CardFooter>
         <p className="text-xs text-muted-foreground select-none">
-          {activeTab === "overview"
+          {isScanScoped
             ? `${points.length} actif(s) géolocalisé(s) · Molette pour zoomer`
-            : `${points.length} site(s) · Molette pour zoomer`}
+            : activeTab === "overview"
+              ? `${points.length} actif(s) géolocalisé(s) · Molette pour zoomer`
+              : `${points.length} site(s) · Molette pour zoomer`}
         </p>
       </CardFooter>
     </Card>

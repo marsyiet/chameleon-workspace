@@ -1,15 +1,16 @@
 "use client"
 
 import { useState } from "react"
-import { Download, RefreshCw, Clock, Globe, Shield, Server, Network, Database, Terminal, Cloud, KeyRound } from "lucide-react"
+import { useRouter } from "next/navigation"
+import { Download, RefreshCw, Globe, Server, Network, Database, Terminal, Cloud, KeyRound } from "lucide-react"
 import { Scan } from "@/app/[locale]/scans/_constants/data-types"
 import { Asset } from "@/types/asset"
 import { AssetRow } from "./asset-row"
 import { Button } from "@/components/ui/button"
 import StatusBadge from "./status-bade"
 import RiskScoreCard from "./risk-score-card"
-import GeoMapCard from "./map-card"
 import AssetsPreviewCard from "./preview-card"
+import GeoMapCard from "../../_components/geo-map/geo-map-card"
 
 function formatDuration(start: string | null, end: string | null): string {
   if (!start || !end) return "—"
@@ -26,10 +27,6 @@ function formatDate(d: string | null): string {
     hour: "2-digit", minute: "2-digit",
   })
 }
-
-// ─── Catégorisation — basée directement sur le vrai assetType (chapitre 2,
-// tableau 2.1), plus besoin de deviner via tags/ports maintenant que le
-// pipeline le calcule réellement (Asset.derive_asset_type). ────────────────
 
 interface Category {
   key: Asset["assetType"]
@@ -59,6 +56,7 @@ interface Props {
 }
 
 export default function ScanResultsView({ scan, assets, onRestart, onViewAllAssets }: Props) {
+  const router = useRouter()
   const duration = formatDuration(scan.startedAt, scan.completedAt)
   const targetsLabel = scan.targets.map((t: any) => t.target).join(", ")
 
@@ -79,92 +77,77 @@ export default function ScanResultsView({ scan, assets, onRestart, onViewAllAsse
     (a) => a.severity === "critical" || a.severity === "high"
   ).length
 
+  const totalCritical = assets.filter(
+    (a) => a.severity === "critical" || a.severity === "high"
+  ).length
+
   return (
     <div className="w-full mx-auto space-y-6">
 
-      {/* ── Header ── (inchangé) */}
-      <div className="relative overflow-hidden rounded-2xl border border-border bg-card px-6 py-8 min-h-[180px]">
-  {/* Background */}
-  <div
-    className="
-      absolute inset-0
-      bg-gradient-to-br
-      from-slate-50
-      via-slate-100/80
-      to-white
-      dark:from-black
-      dark:via-zinc-900
-      dark:to-zinc-950
-    "
-  />
+      {/* ── Header : informations en colonnes, sans gradient ni séparateurs ── */}
+      <div className="rounded-2xl border border-border bg-card px-6 py-6">
+        <div className="flex items-start justify-between gap-4 flex-wrap mb-6">
+          <div className="space-y-2">
+            <h3 className="text-foreground">{scan.name}</h3>
+            <StatusBadge status={scan.status} />
+          </div>
 
-  {/* Accent */}
-  <div
-    className="absolute inset-0 opacity-10 dark:opacity-20"
-    style={{ background: "var(--gradient-primary)" }}
-  />
+          <div className="flex items-center gap-2">
+            {onRestart && (
+              <Button variant="outline" size="sm" onClick={onRestart}>
+                <RefreshCw className="h-3.5 w-3.5" />
+                Relancer
+              </Button>
+            )}
+            <Button size="sm">
+              <Download className="h-3.5 w-3.5" />
+              Télécharger le rapport
+            </Button>
+          </div>
+        </div>
 
-  {/* Decorative image */}
-  <div className="absolute right-8 -bottom-10 pointer-events-none select-none opacity-15 dark:opacity-100">
-    <img src="/images/demi.png" alt="" className="w-60" />
-  </div>
-
-  {/* Content */}
-  <div className="relative flex items-start justify-between gap-4 flex-wrap">
-    <div className="space-y-3 max-w-2xl">
-      <h3 className="text-foreground dark:text-white">
-        {scan.name}
-      </h3>
-
-      <StatusBadge status={scan.status} />
-
-      <p className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-        <span>{targetsLabel}</span>
-        <span>•</span>
-        <span className="capitalize">{scan.scanType} scan</span>
-        <span>•</span>
-        <span className="font-medium text-foreground dark:text-white">
-          Durée {duration}
-        </span>
-      </p>
-
-      <Button>
-        <Download className="h-3.5 w-3.5" />
-        Télécharger le rapport
-      </Button>
-    </div>
-  </div>
-</div>
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-6 pt-6 border-t border-border">
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Cible</p>
+            <p className="text-sm font-medium text-foreground truncate">{targetsLabel}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Type de scan</p>
+            <p className="text-sm font-medium text-foreground capitalize">{scan.scanType}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Durée</p>
+            <p className="text-sm font-medium text-foreground">{duration}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Actifs découverts</p>
+            <p className="text-sm font-medium text-foreground">{assets.length}</p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Risque élevé</p>
+            <p className="text-sm font-medium text-foreground">
+              {totalCritical > 0 ? (
+                <span className="text-destructive">{totalCritical} actif{totalCritical > 1 ? "s" : ""}</span>
+              ) : (
+                "Aucun"
+              )}
+            </p>
+          </div>
+          <div>
+            <p className="text-xs text-muted-foreground mb-1">Terminé le</p>
+            <p className="text-sm font-medium text-foreground">{formatDate(scan.completedAt)}</p>
+          </div>
+        </div>
+      </div>
 
       {/* ── Grille map + risk + aperçu ── */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <AssetsPreviewCard className="md:col-span-1" assets={assets} onViewAll={onViewAllAssets} />
         <RiskScoreCard className="md:col-span-1" assets={assets} scanTarget={targetsLabel} />
-        <GeoMapCard className="md:col-span-2" />
-      </div>
-
-      {/* ── Métrique unique : Assets. Le reste (ports, CVE, durée) se retrouve
-          plus bas dans les onglets par catégorie — pas besoin de le dupliquer ici. ── */}
-      <div className="max-w-xs">
-        <div className="bg-card border border-border rounded-xl p-4 space-y-3">
-          <div className="flex items-center justify-between">
-            <p className="text-xs text-muted-foreground font-medium uppercase tracking-wide">
-              Assets
-            </p>
-            <div
-              className="flex h-7 w-7 items-center justify-center rounded-lg"
-              style={{ background: "color-mix(in oklch, var(--gradient-from) 15%, transparent)" }}
-            >
-              <Globe className="h-3.5 w-3.5" style={{ color: "var(--gradient-from)" }} />
-            </div>
-          </div>
-          <p className="text-3xl font-bold text-foreground">{assets.length}</p>
-        </div>
+        <GeoMapCard className="md:col-span-2" assets={assets} />
       </div>
 
       {/* ── Assets par catégorie ── */}
       <div className="bg-card border border-border rounded-2xl overflow-hidden">
-
         <div className="flex overflow-x-auto border-b border-border">
           {filledCategories.map((cat) => {
             const Icon = cat.icon
@@ -173,6 +156,7 @@ export default function ScanResultsView({ scan, assets, onRestart, onViewAllAsse
             return (
               <button
                 key={cat.key}
+                type="button"
                 onClick={() => setActiveTab(cat.key)}
                 className="flex items-center gap-2 px-4 py-3.5 text-sm whitespace-nowrap transition-colors relative shrink-0"
                 style={{
@@ -203,9 +187,7 @@ export default function ScanResultsView({ scan, assets, onRestart, onViewAllAsse
         </div>
 
         <div className="flex items-center justify-between px-5 py-3 border-b border-border bg-secondary/30">
-          <div>
-            <p className="text-xs text-muted-foreground">{activeCategory.description}</p>
-          </div>
+          <p className="text-xs text-muted-foreground">{activeCategory.description}</p>
           <div className="flex items-center gap-2">
             {activeCritical > 0 && (
               <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-red-500/15 text-red-600 dark:text-red-400">
@@ -226,24 +208,12 @@ export default function ScanResultsView({ scan, assets, onRestart, onViewAllAsse
           ) : (
             activeAssets.map((asset) => (
               <div key={asset._id} className="px-5 py-2">
-                <AssetRow asset={asset} />
+                <AssetRow
+                  asset={asset}
+                  onClick={() => router.push(`/scans/${scan._id}/asset/${asset._id}`)}
+                />
               </div>
             ))
-          )}
-        </div>
-      </div>
-
-      {/* ── Footer ── */}
-      <div className="flex items-center justify-between pt-4 border-t border-border">
-        <p className="text-xs text-muted-foreground">
-          Terminé le {formatDate(scan.completedAt)}
-        </p>
-        <div className="flex items-center gap-2">
-          {onRestart && (
-            <Button variant="outline" size="sm" onClick={onRestart}>
-              <RefreshCw className="h-3.5 w-3.5" />
-              Relancer
-            </Button>
           )}
         </div>
       </div>
