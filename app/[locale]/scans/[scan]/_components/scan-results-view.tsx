@@ -83,30 +83,58 @@ export default function ScanResultsView({ scan, assets, onRestart, onViewAllAsse
     <div className="w-full mx-auto space-y-6">
 
       {/* ── Header ── (inchangé) */}
-      <div className="relative rounded-2xl overflow-hidden px-6 py-8 min-h-[180px]">
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20" />
-        <div className="absolute inset-0 opacity-20" style={{ background: "var(--gradient-primary)" }} />
-        <div className="absolute right-8 -bottom-10 flex items-center select-none pointer-events-none">
-          <img src="/images/demi.png" alt="" className="w-60" />
-        </div>
-        <div className="relative flex items-start justify-between gap-4 flex-wrap">
-          <div className="space-y-3">
-            <h2 className="valenzka text-white text-3xl leading-tight">{scan.name}</h2>
-            <StatusBadge status={scan.status} />
-            <p className="text-sm flex items-center gap-2 flex-wrap">
-              <span>{targetsLabel}</span>
-              <span className="text-muted-foreground">·</span>
-              <span className="capitalize">{scan.scanType} scan</span>
-              <span className="text-muted-foreground">·</span>
-              <span className="font-bold">Durée {duration}</span>
-            </p>
-            <Button>
-              <Download className="h-3.5 w-3.5" />
-              Télécharger le rapport
-            </Button>
-          </div>
-        </div>
-      </div>
+      <div className="relative overflow-hidden rounded-2xl border border-border bg-card px-6 py-8 min-h-[180px]">
+  {/* Background */}
+  <div
+    className="
+      absolute inset-0
+      bg-gradient-to-br
+      from-slate-50
+      via-slate-100/80
+      to-white
+      dark:from-black
+      dark:via-zinc-900
+      dark:to-zinc-950
+    "
+  />
+
+  {/* Accent */}
+  <div
+    className="absolute inset-0 opacity-10 dark:opacity-20"
+    style={{ background: "var(--gradient-primary)" }}
+  />
+
+  {/* Decorative image */}
+  <div className="absolute right-8 -bottom-10 pointer-events-none select-none opacity-15 dark:opacity-100">
+    <img src="/images/demi.png" alt="" className="w-60" />
+  </div>
+
+  {/* Content */}
+  <div className="relative flex items-start justify-between gap-4 flex-wrap">
+    <div className="space-y-3 max-w-2xl">
+      <h3 className="text-foreground dark:text-white">
+        {scan.name}
+      </h3>
+
+      <StatusBadge status={scan.status} />
+
+      <p className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+        <span>{targetsLabel}</span>
+        <span>•</span>
+        <span className="capitalize">{scan.scanType} scan</span>
+        <span>•</span>
+        <span className="font-medium text-foreground dark:text-white">
+          Durée {duration}
+        </span>
+      </p>
+
+      <Button>
+        <Download className="h-3.5 w-3.5" />
+        Télécharger le rapport
+      </Button>
+    </div>
+  </div>
+</div>
 
       {/* ── Grille map + risk + aperçu ── */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">

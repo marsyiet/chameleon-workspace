@@ -51,7 +51,7 @@ export default function AssetListCard({ className }: AssetListCardProps) {
     <Card className={cn("flex flex-col", className)}>
       <CardHeader className="pb-3">
         <CardTitle className="text-base flex items-center justify-between">
-          Actifs
+          Tous
           <span className="text-sm font-normal text-muted-foreground">
             {assetsArray.length} au total
           </span>
@@ -125,7 +125,7 @@ export default function AssetListCard({ className }: AssetListCardProps) {
                         </Badge>
                       </div>
 
-                      <div className="flex items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-0.5">
                         <span>{asset.ipAddress}</span>
                         <span>·</span>
                         <span className="truncate">{primaryLabel(asset)}</span>

@@ -52,19 +52,13 @@ export default function NewScan() {
   }
   return (
     <div className="space-y-4">
-      <h3 className="valenzka">New scan</h3>
-      <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-        <div className="lg:col-span-1">
+        <div className="max-w-2xl mx-auto">
           <ConfigurationForm
             form={form}
             onSubmit={onSubmit}
             isPending={createScanMutation.isPending}
           />
         </div>
-        <div className="lg:col-span-2">
-          <Preview form={form} />
-        </div>
-      </div>
     </div>
   )
 }

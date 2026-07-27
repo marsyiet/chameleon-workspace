@@ -13,32 +13,16 @@ export default function ScheduledScansPage() {
       new Date(b.scheduledAt).getTime()
   )
 
+  console.log("ScheduledScansPage", { scans })
+
   if (isLoading) return <LoaderGlobal />
   if (error) return <div>Erreur</div>
 
   return (
     <div className="space-y-4">
-      {/* ── Header ── */}
-      <div className="relative rounded-2xl overflow-hidden px-6 py-8 min-h-[80px]">
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-black/20" />
-        <div
-          className="absolute inset-0 opacity-20"
-          style={{ background: "var(--gradient-primary)" }}
-        />
-        <div className="absolute right-8 -bottom-10 flex items-center select-none pointer-events-none">
-          <img src="/images/demi.png" alt="" className=" w-60" />
-        </div>
-        <div className="relative flex items-start justify-between gap-4 flex-wrap">
-          <div className="space-y-1">
-            <h2 className="valenzka text-white text-3xl leading-tight">
-              Scheduled scans
-            </h2>
-            <p className="text-sm text-muted-foreground">
-              Les scans programmés, du plus proche au plus lointain.
-            </p>
-          </div>
-        </div>
-      </div>
+      <h3 className=" text-foreground dark:text-white">
+        Scheduled scans
+      </h3>
 
       {scans.length === 0 ? (
         <div className="text-center text-muted-foreground py-16">

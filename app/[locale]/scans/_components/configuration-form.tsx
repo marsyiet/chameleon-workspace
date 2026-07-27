@@ -50,6 +50,10 @@ export default function ConfigurationForm({
   )
   const [pendingTime, setPendingTime] = useState("09:00")
 
+  const [pendingAction, setPendingAction] = useState<
+  "schedule" | "launch" | null
+>(null)
+
   const confirmSchedule = () => {
     if (!pendingDate) return
 
@@ -62,18 +66,25 @@ export default function ConfigurationForm({
     })
 
     setScheduleOpen(false)
+    setPendingAction("schedule")
     form.handleSubmit(onSubmit)()
   }
 
   const launchNow = () => {
     form.setValue("scheduledAt", null)
+    setPendingAction("launch")
     form.handleSubmit(onSubmit)()
   }
+
+  const isScheduling = isPending && pendingAction === "schedule"
+  const isLaunching = isPending && pendingAction === "launch"
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Scan Configuration</CardTitle>
+        <CardTitle>
+          <h3>Scan Configuration</h3>
+        </CardTitle>
       </CardHeader>
 
       <CardContent>
@@ -278,7 +289,8 @@ export default function ConfigurationForm({
                   <Button
                     type="button"
                     variant={"secondary"}
-                    loading={isPending}
+                    loading={isScheduling}
+                    disabled={isPending}
                     className="w-full"
                   >
                     <CalendarIcon className="size-4" />
@@ -322,7 +334,8 @@ export default function ConfigurationForm({
 
               <Button
                 type="button"
-                loading={isPending}
+                loading={isLaunching}
+                disabled={isPending}
                 className="w-full"
                 onClick={launchNow}
               >
