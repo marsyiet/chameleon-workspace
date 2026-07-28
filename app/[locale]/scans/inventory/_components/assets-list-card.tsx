@@ -1,7 +1,17 @@
 "use client"
 
 import { useState } from "react"
-import { SearchIcon, ServerIcon } from "lucide-react"
+import { useRouter } from "next/navigation"
+import {
+  SearchIcon,
+  ServerIcon,
+  Globe,
+  Database,
+  Terminal,
+  Cloud,
+  KeyRound,
+  Network,
+} from "lucide-react"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -21,6 +31,19 @@ const SEVERITY_STYLE: Record<Asset["severity"], string> = {
   informational: "bg-muted text-muted-foreground border-transparent",
 }
 
+// Cohérent avec CATEGORIES (scan-results-view) et ASSET_TYPE_ICONS (geo-map) —
+// une icône par assetType, plutôt qu'un fallback générique unique.
+const ASSET_TYPE_ICON: Record<Asset["assetType"], React.ComponentType<{ className?: string }>> = {
+  web: Globe,
+  api: ServerIcon,
+  database: Database,
+  "remote-access": Terminal,
+  mail: Cloud,
+  authentication: KeyRound,
+  network: Network,
+  unknown: ServerIcon,
+}
+
 function primaryLabel(asset: Asset): string {
   return asset.tags?.[0] ?? asset.os ?? "actif inconnu"
 }
@@ -30,6 +53,7 @@ interface AssetListCardProps {
 }
 
 export default function AssetListCard({ className }: AssetListCardProps) {
+  const router = useRouter()
   const { data: assets, isLoading, error } = useInventoryAssets()
   const [search, setSearch] = useState("")
 
@@ -41,7 +65,6 @@ export default function AssetListCard({ className }: AssetListCardProps) {
       asset.ipAddress?.toLowerCase().includes(query) ||
       asset.hostname?.toLowerCase().includes(query) ||
       asset.rdns?.toLowerCase().includes(query) ||
-      // Défensif : documents créés avant l'ajout du champ "tags" au modèle
       (asset.tags ?? []).some((t) => t.toLowerCase().includes(query)) ||
       asset.os?.toLowerCase().includes(query)
     )
@@ -90,14 +113,18 @@ export default function AssetListCard({ className }: AssetListCardProps) {
                 const severity = asset.severity ?? "informational"
                 const riskValue = asset.riskScore?.value ?? 0
                 const serviceCount = asset.services?.length ?? 0
+                const TypeIcon = ASSET_TYPE_ICON[asset.assetType] ?? ServerIcon
+                const hasFavicon = !!asset.http?.faviconUrl
 
                 return (
-                  <div
+                  <button
                     key={asset._id}
-                    className="flex items-start gap-3 rounded-lg border p-3 hover:bg-muted/50 transition-colors cursor-pointer"
+                    type="button"
+                    onClick={() => router.push(`/scans/${asset.scanId}/asset/${asset._id}`)}
+                    className="w-full flex items-start gap-3 rounded-lg border p-3 hover:bg-muted/50 transition-colors text-left"
                   >
                     <div className="mt-0.5 rounded-md bg-muted p-1.5 shrink-0 overflow-hidden size-7 flex items-center justify-center">
-                      {asset.http?.faviconUrl ? (
+                      {hasFavicon ? (
                         // eslint-disable-next-line @next/next/no-img-element
                         <img
                           src={asset.http.faviconUrl}
@@ -108,11 +135,11 @@ export default function AssetListCard({ className }: AssetListCardProps) {
                           }}
                         />
                       ) : (
-                        <ServerIcon className="size-4" />
+                        <TypeIcon className="size-4 text-muted-foreground" />
                       )}
                     </div>
 
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 space-y-1">
                       <div className="flex items-center justify-between gap-2">
                         <p className="text-sm font-medium truncate">
                           {asset.hostname || asset.rdns || asset.ipAddress}
@@ -125,21 +152,16 @@ export default function AssetListCard({ className }: AssetListCardProps) {
                         </Badge>
                       </div>
 
-                      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mt-0.5">
+                      <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
                         <span>{asset.ipAddress}</span>
-                        <span>·</span>
                         <span className="truncate">{primaryLabel(asset)}</span>
-                        <span>·</span>
-                        <span>{serviceCount} service(s)</span>
-                        {riskValue > 0 && (
-                          <>
-                            <span>·</span>
-                            <span>score {riskValue.toFixed(1)}</span>
-                          </>
-                        )}
+                        <div className="flex items-center gap-3">
+                          <span>{serviceCount} service{serviceCount > 1 ? "s" : ""}</span>
+                          {riskValue > 0 && <span>Score {riskValue.toFixed(1)}</span>}
+                        </div>
                       </div>
                     </div>
-                  </div>
+                  </button>
                 )
               })}
             </div>
