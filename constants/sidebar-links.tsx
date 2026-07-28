@@ -1,29 +1,46 @@
 import {
   LayoutDashboardIcon,
   RadarIcon,
-  ServerIcon,
-  NetworkIcon,
-  ShieldCheckIcon,
-  SearchIcon,
+  EyeIcon,
+  ShieldAlertIcon,
   UsersIcon,
+  KeyRoundIcon,
   ClipboardListIcon,
   Settings2Icon,
-  KeyRoundIcon,
-  MapIcon,
-  BugIcon,
-  FileBarChart2Icon,
-  ShieldAlertIcon,
-  Share2Icon,
-  WorkflowIcon,
-  EyeIcon,
-  BellIcon,
+  ShieldCheckIcon,
 } from "lucide-react"
+
+export type NavAccent = "violet" | "teal" | "amber" | "rose"
+
+export const ACCENT_COLORS: Record<NavAccent, { icon: string; activeBg: string; activeBorder: string }> = {
+  violet: {
+    icon: "text-[oklch(0.58_0.26_290)]",
+    activeBg: "bg-[oklch(0.58_0.26_290_/_0.18)]",
+    activeBorder: "border-l-[oklch(0.58_0.26_290)]",
+  },
+  teal: {
+    icon: "text-[oklch(0.60_0.14_180)]",
+    activeBg: "bg-[oklch(0.60_0.14_180_/_0.18)]",
+    activeBorder: "border-l-[oklch(0.60_0.14_180)]",
+  },
+  amber: {
+    icon: "text-[oklch(0.68_0.16_70)]",
+    activeBg: "bg-[oklch(0.68_0.16_70_/_0.18)]",
+    activeBorder: "border-l-[oklch(0.68_0.16_70)]",
+  },
+  rose: {
+    icon: "text-[oklch(0.62_0.21_10)]",
+    activeBg: "bg-[oklch(0.62_0.21_10_/_0.18)]",
+    activeBorder: "border-l-[oklch(0.62_0.21_10)]",
+  },
+}
+
 export const data = () => {
   return {
     user: {
       name: "Admin",
       email: "admin@chameleon.io",
-      avatar: "/globe.svg",
+      avatar: "/images/avatar.jpg",
     },
     teams: [
       {
@@ -34,115 +51,51 @@ export const data = () => {
     ],
     navMain: [
       {
-        title: "Search",
-        url: "/search",
-        icon: <SearchIcon />,
-      },
-      {
         title: "Dashboard",
-        url: "/",
+        url: "/dashboard",
         icon: <LayoutDashboardIcon />,
+        accent: "violet" as NavAccent,
       },
       {
         title: "Cartographie",
         url: "/scans",
         icon: <RadarIcon />,
+        accent: "teal" as NavAccent,
         items: [
-          {
-            title: "All Scans",
-            url: "/scans",
-          },
-          {
-            title: "New Scan",
-            url: "/scans/new",
-          },
-          {
-            title: "Scheduled Scans",
-            url: "/scans/scheduled",
-          },
-          {
-            title: "Inventaire",
-            url: "/scans/inventory",
-          },
+          { title: "Inventaire", url: "/scans/inventory" },
+          { title: "All Scans", url: "/scans" },
+          { title: "New Scan", url: "/scans/new" },
+          { title: "Scheduled Scans", url: "/scans/scheduled" },
         ],
       },
       {
         title: "Surveillance",
         url: "/surveillance",
         icon: <EyeIcon />,
+        accent: "amber" as NavAccent,
         items: [
-          {
-            title: "Threat Intelligence",
-            url: "/threat-intel",
-          },
-          {
-            title: "Alertes & Changements",
-            url: "/surveillance/alerts",
-          },
+          { title: "Threat Intelligence", url: "/threat-intel" },
+          { title: "Alertes & Changements", url: "/surveillance/alerts" },
         ],
       },
       {
         title: "Gestion des risques",
         url: "/risk",
         icon: <ShieldAlertIcon />,
+        accent: "rose" as NavAccent,
         items: [
-          {
-            title: "Vulnerabilities",
-            url: "/vulnerabilities",
-          },
-          {
-            title: "Reports",
-            url: "/reports",
-          },
-          {
-            title: "Remediation",
-            url: "/remediation",
-          },
-          {
-            title: "Firewall Integrations",
-            url: "/integrations/firewall",
-          },
+          { title: "Vulnerabilities", url: "/vulnerabilities" },
+          { title: "Reports", url: "/reports" },
+          { title: "Remediation", url: "/remediation" },
+          { title: "Firewall Integrations", url: "/integrations/firewall" },
         ],
       },
     ],
-    campaigns: [
-      {
-        name: "External Attack Surface",
-        url: "/campaigns/1",
-        icon: <RadarIcon />,
-      },
-      {
-        name: "Corporate Network",
-        url: "/campaigns/2",
-        icon: <NetworkIcon />,
-      },
-      {
-        name: "Cloud Assets",
-        url: "/campaigns/3",
-        icon: <ServerIcon />,
-      },
-    ],
     administration: [
-      {
-        name: "Users",
-        url: "/users",
-        icon: <UsersIcon />,
-      },
-      {
-        name: "Roles",
-        url: "/roles",
-        icon: <KeyRoundIcon />,
-      },
-      {
-        name: "Audit Logs",
-        url: "/audit-logs",
-        icon: <ClipboardListIcon />,
-      },
-      {
-        name: "Settings",
-        url: "/settings",
-        icon: <Settings2Icon />,
-      },
+      { name: "Users", url: "/users", icon: <UsersIcon />, accent: "violet" as NavAccent },
+      { name: "Roles", url: "/roles", icon: <KeyRoundIcon />, accent: "teal" as NavAccent },
+      { name: "Audit Logs", url: "/audit-logs", icon: <ClipboardListIcon />, accent: "amber" as NavAccent },
+      { name: "Settings", url: "/settings", icon: <Settings2Icon />, accent: "rose" as NavAccent },
     ],
   }
 }

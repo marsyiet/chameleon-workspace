@@ -37,12 +37,12 @@ const SEVERITY_COLOR: Record<string, string> = {
 
 function serviceIcon(service: string | undefined) {
   const map: Record<string, React.ReactNode> = {
-    ssh:   <TerminalIcon className="w-4 h-4" />,
+    ssh: <TerminalIcon className="w-4 h-4" />,
     mysql: <Database className="w-4 h-4" />,
     postgresql: <Database className="w-4 h-4" />,
     mongodb: <Database className="w-4 h-4" />,
     redis: <Database className="w-4 h-4" />,
-    http:  <Globe className="w-4 h-4" />,
+    http: <Globe className="w-4 h-4" />,
     https: <Lock className="w-4 h-4" />,
   }
   return map[service ?? ""] ?? <Plug className="w-4 h-4" />
@@ -171,38 +171,145 @@ export default function AssetDetailPage() {
         </Card>
       </div>
 
-      {/* ── Services détectés ── */}
-      <Card>
-        <CardHeader>
-          <h5 className="text-foreground">Services détectés</h5>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          {asset.services.map((svc) => (
-            <div
-              key={svc.port}
-              className="flex items-center gap-3 rounded-lg border border-border px-4 py-3"
-            >
-              <span className="text-muted-foreground shrink-0">
-                {serviceIcon(svc.service)}
-              </span>
-              <span className="text-xs font-mono px-2 py-1 rounded-full bg-secondary border border-border shrink-0">
-                {svc.port}/{svc.protocol}
-              </span>
-              <span className="text-sm text-foreground">
-                {svc.product || svc.service || "—"}
-                {svc.version && (
-                  <span className="text-muted-foreground ml-1.5">{svc.version}</span>
+      {/* ── Services détectés (une card par port/service, façon Censys) ── */}
+      <div className="space-y-4">
+        <h5 className="text-foreground">Services détectés</h5>
+
+        {asset.services.map((svc) => {
+          const isHttp = svc.service === "http" || svc.service === "https" || svc.port === 80 || svc.port === 443 || svc.port === 8080 || svc.port === 8443
+          const isHttps = svc.service === "https" || svc.port === 443 || svc.port === 8443
+
+          return (
+            <Card key={svc.port}>
+              <CardHeader className="pb-3">
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono px-2 py-1 rounded-full bg-secondary border border-border">
+                      {svc.port}/{svc.protocol}
+                    </span>
+                    <h5 className="text-foreground">
+                      {svc.product || svc.service || "Service non identifié"}
+                      {svc.version && (
+                        <span className="text-muted-foreground font-normal ml-1.5">{svc.version}</span>
+                      )}
+                    </h5>
+                  </div>
+                  {svc.cves.length > 0 && (
+                    <span className="text-[11px] font-medium px-2 py-0.5 rounded-full bg-red-50/10 text-destructive">
+                      {svc.cves.length} CVE
+                    </span>
+                  )}
+                </div>
+                {svc.banner && (
+                  <p className="text-xs text-muted-foreground font-mono mt-1">{svc.banner}</p>
                 )}
-              </span>
-              {svc.banner && (
-                <span className="ml-auto text-xs text-muted-foreground truncate max-w-xs">
-                  {svc.banner}
-                </span>
-              )}
-            </div>
-          ))}
-        </CardContent>
-      </Card>
+              </CardHeader>
+
+              <CardContent className="space-y-4">
+
+                {/* Détails HTTP, uniquement pour les endpoints web de CE service */}
+                {isHttp && asset.http && (asset.http.title || asset.http.statusCode) && (
+                  <div className="rounded-lg border border-border p-3 space-y-2">
+                    <p className="text-xs font-medium text-muted-foreground">Endpoint HTTP</p>
+                    <div className="flex items-start gap-2">
+                      {asset.http.faviconUrl && (
+                        <img
+                          src={asset.http.faviconUrl}
+                          alt=""
+                          className="w-6 h-6 rounded shrink-0 mt-0.5"
+                          onError={(e) => { e.currentTarget.style.display = "none" }}
+                        />
+                      )}
+                      <div className="min-w-0">
+                        <p className="text-sm text-foreground truncate">
+                          {asset.http.title || "Titre non détecté"}
+                        </p>
+                        {asset.http.statusCode && (
+                          <p className="text-xs text-muted-foreground">
+                            Statut {asset.http.statusCode}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    {(asset.http.technologies?.length ?? 0) > 0 && (
+                      <div className="flex flex-wrap gap-1.5 pt-1">
+                        {asset.http.technologies.map((tech) => (
+                          <span
+                            key={tech}
+                            className="text-[11px] px-2 py-0.5 rounded-full bg-secondary text-secondary-foreground border border-border"
+                          >
+                            {tech}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+
+                    {(asset.http.loginPoints?.length ?? 0) > 0 && (
+                      <div className="pt-1 space-y-1">
+                        <p className="text-xs text-muted-foreground">Points d'authentification</p>
+                        {asset.http.loginPoints.map((lp) => (
+                          <p key={lp.url} className="text-xs font-mono text-foreground truncate">
+                            {lp.url}
+                            <span className="text-muted-foreground ml-2">
+                              ({lp.type}, {lp.confidence})
+                            </span>
+                          </p>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* Certificat TLS, uniquement pour les endpoints HTTPS de CE service */}
+                {isHttps && asset.tls && asset.tls.subject && (
+                  <div className="rounded-lg border border-border p-3 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <p className="text-xs font-medium text-muted-foreground">Certificat TLS</p>
+                      <div className="flex gap-1">
+                        {asset.tls.selfSigned && (
+                          <span className="text-[11px] px-2 py-0.5 rounded-full bg-amber-50/10 text-amber-700">
+                            Auto-signé
+                          </span>
+                        )}
+                        {asset.tls.expired && (
+                          <span className="text-[11px] px-2 py-0.5 rounded-full bg-red-50/10 text-destructive">
+                            Expiré
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="text-xs space-y-1">
+                      <p className="text-foreground font-mono truncate">{asset.tls.subject}</p>
+                      <p className="text-muted-foreground">
+                        Émis par : {asset.tls.issuer || "—"}
+                      </p>
+                      {asset.tls.validTo && (
+                        <p className="text-muted-foreground">
+                          Valide jusqu'au {new Date(asset.tls.validTo).toLocaleDateString("fr-FR")}
+                        </p>
+                      )}
+                      {asset.tls.san?.length > 0 && (
+                        <p className="text-muted-foreground">
+                          Noms alternatifs : {asset.tls.san.join(", ")}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* CVE de ce service précis */}
+                {svc.cves.length > 0 && (
+                  <div>
+                    <p className="text-xs font-medium text-muted-foreground mb-2">Vulnérabilités</p>
+                    <CveList cves={svc.cves} />
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )
+        })}
+      </div>
 
       {/* ── Vulnérabilités ── */}
       {allCves.length > 0 && (

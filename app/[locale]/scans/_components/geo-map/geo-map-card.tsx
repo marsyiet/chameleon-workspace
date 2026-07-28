@@ -7,17 +7,18 @@ import { cn } from "@/lib/utils"
 import { Info } from "lucide-react"
 
 import { useInventoryAssets } from "@/hooks/assets/use-inventory-assets"
-import { useOrganizationSites } from "@/hooks/use-organization-sites"
+import { useOrganizationMapPoints } from "@/hooks/organizations/use-organization-map-points"
 
 import MapView from "./map-view"
 import AssetDetailPanel from "./asset-detail-panel"
 import { MapPoint } from "./types"
-import { Asset } from "@/app/[locale]/scans/_constants/data-types"
+import { Asset } from "@/types/asset"
 
 interface GeoMapCardProps {
   className?: string
   // Si fourni : mode "scan" — carte scopée à ces actifs uniquement, pas d'onglets.
-  // Si absent : mode "global" — vue nationale/organisationnelle via les hooks.
+  // Si absent : mode "global" — vue nationale (tous actifs) / organisationnelle
+  // (toutes les organisations géolocalisées).
   assets?: Asset[]
 }
 
@@ -37,7 +38,7 @@ function toOverviewPoints(assets: Asset[]): MapPoint[] {
       sublabel: [a.geo.city, a.geo.country].filter(Boolean).join(", "),
       coords: [a.geo.lat as number, a.geo.lon as number],
       kind: "asset" as const,
-      assetType: a.assetType,
+      assetType: a.natureType ?? a.assetType,
       severity: a.severity,
     }))
 }
@@ -49,31 +50,28 @@ export default function GeoMapCard({ className, assets: assetsProp }: GeoMapCard
   const [activeTab, setActiveTab] = useState<"overview" | "organizational">("overview")
   const [tilesFailed, setTilesFailed] = useState(false)
 
-  // Hooks globaux : n'ont d'effet utile qu'en mode global, mais on les appelle
-  // inconditionnellement (règle des Hooks React) — `enabled` les neutralise
-  // en mode scan pour éviter une requête inutile.
   const { data: globalAssets } = useInventoryAssets({ enabled: !isScanScoped })
-  const { data: orgSitesData } = useOrganizationSites()
+  const { data: orgMapPoints } = useOrganizationMapPoints()
 
   const globalAssetsArray = Array.isArray(globalAssets) ? globalAssets : []
 
   const cardTitle = isScanScoped
     ? "Carte des actifs de ce scan"
     : activeTab === "organizational"
-      ? `Carte des actifs — ${(orgSitesData?.organization.name ?? "").toUpperCase()}`
+      ? "Carte des organisations"
       : "Carte des actifs — Cameroun"
 
   const overviewPoints: MapPoint[] = toOverviewPoints(isScanScoped ? assetsProp! : globalAssetsArray)
 
-  const organizationalPoints: MapPoint[] = (orgSitesData?.sites ?? [])
-    .filter((site) => site.lat !== null && site.lon !== null)
-    .map((site) => ({
-      id: site.id,
-      label: site.name,
-      sublabel: site.city ?? undefined,
-      coords: [site.lat as number, site.lon as number],
+  const organizationalPoints: MapPoint[] = (orgMapPoints ?? [])
+    .filter((org) => org.geo?.lat !== null && org.geo?.lon !== null)
+    .map((org) => ({
+      id: org._id,
+      label: org.name,
+      sublabel: org.geo.city ?? undefined,
+      coords: [org.geo.lat as number, org.geo.lon as number],
       kind: "site" as const,
-      assetCount: site.assetCount,
+      assetCount: org.assetCount,
     }))
 
   const points = isScanScoped
@@ -100,7 +98,7 @@ export default function GeoMapCard({ className, assets: assetsProp }: GeoMapCard
             >
               <TabsList>
                 <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
-                <TabsTrigger value="organizational">Organisationnelle</TabsTrigger>
+                <TabsTrigger value="organizational">Organisations</TabsTrigger>
               </TabsList>
             </Tabs>
           )}
@@ -134,7 +132,7 @@ export default function GeoMapCard({ className, assets: assetsProp }: GeoMapCard
                   ? "Aucun actif externe géolocalisé pour ce scan."
                   : activeTab === "overview"
                     ? "Aucun actif externe géolocalisé pour le moment."
-                    : "Aucun site déclaré pour votre organisation."}
+                    : "Aucune organisation géolocalisée pour le moment."}
               </p>
             </div>
           </div>
@@ -149,7 +147,7 @@ export default function GeoMapCard({ className, assets: assetsProp }: GeoMapCard
             ? `${points.length} actif(s) géolocalisé(s) · Molette pour zoomer`
             : activeTab === "overview"
               ? `${points.length} actif(s) géolocalisé(s) · Molette pour zoomer`
-              : `${points.length} site(s) · Molette pour zoomer`}
+              : `${points.length} organisation(s) · Molette pour zoomer`}
         </p>
       </CardFooter>
     </Card>

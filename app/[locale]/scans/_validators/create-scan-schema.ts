@@ -14,11 +14,14 @@ export const createScanSchema = z.object({
     "web",
     "full",
   ]),
-  // Structure auditée par ce scan (ex: "MINFI") — texte libre, optionnel.
+  // Structure auditée par ce scan, sélectionnée parmi les organisations
+  // existantes (Select alimenté par GET /organizations) — transporte
+  // désormais un vrai organizationId, plus un nom libre tapé à la main.
   // Se propage à tous les actifs découverts (voir chapitre 2, §2.1.4).
   targetOrganization: z
     .string()
     .max(100)
+    .nullable()
     .optional(),
   scheduledAt: z
     .date()

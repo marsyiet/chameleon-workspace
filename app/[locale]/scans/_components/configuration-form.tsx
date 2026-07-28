@@ -25,6 +25,7 @@ import {
 import { Calendar } from "@/components/ui/calendar"
 
 import { CreateScanFormValues } from "../_validators/create-scan-schema"
+import { useOrganizations } from "@/hooks/organizations/use-organizations"
 
 interface ConfigurationFormProps {
   form: UseFormReturn<CreateScanFormValues>
@@ -44,15 +45,16 @@ export default function ConfigurationForm({
     name: "targets",
   })
 
+  const { data: organizations, isLoading: organizationsLoading } = useOrganizations()
+  const organizationsArray = Array.isArray(organizations) ? organizations : []
+
   const [scheduleOpen, setScheduleOpen] = useState(false)
   const [pendingDate, setPendingDate] = useState<Date | undefined>(
     undefined
   )
   const [pendingTime, setPendingTime] = useState("09:00")
 
-  const [pendingAction, setPendingAction] = useState<
-  "schedule" | "launch" | null
->(null)
+  const [pendingAction, setPendingAction] = useState<"schedule" | "launch" | null>(null)
 
   const confirmSchedule = () => {
     if (!pendingDate) return
@@ -137,12 +139,31 @@ export default function ConfigurationForm({
                 <Field data-invalid={fieldState.invalid}>
                   <FieldLabel>Structure concernée (optionnel)</FieldLabel>
 
-                  <Input
-                    {...field}
+                  <Select
                     value={field.value ?? ""}
-                    placeholder="MINFI"
-                    aria-invalid={fieldState.invalid}
-                  />
+                    onValueChange={(v) => field.onChange(v === "__none__" ? null : v)}
+                    disabled={organizationsLoading}
+                  >
+                    <SelectTrigger>
+                      <SelectValue
+                        placeholder={
+                          organizationsLoading ? "Chargement..." : "Aucune structure sélectionnée"
+                        }
+                      />
+                    </SelectTrigger>
+
+                    <SelectContent>
+                      <SelectItem value="__none__">
+                        Aucune (cartographie nationale)
+                      </SelectItem>
+
+                      {organizationsArray.map((org) => (
+                        <SelectItem key={org._id} value={org._id}>
+                          {org.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
 
                   {fieldState.invalid && (
                     <FieldError errors={[fieldState.error]} />
