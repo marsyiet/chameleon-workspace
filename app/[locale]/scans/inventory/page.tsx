@@ -9,8 +9,8 @@ const page = () => {
         <div className='flex flex-col gap-4'>
             <h3>Inventaire</h3>
 
-            <div className='grid grid-cols-1 lg:grid-cols-3 gap-4 relative'>
-                <GeoMapCard className="lg:col-span-2 sticky top-4" />
+            <div className='grid grid-cols-1 lg:grid-cols-2 gap-4 relative'>
+                <GeoMapCard className="lg:col-span-1 sticky top-4" />
                 <div className="h-20">
                     <AssetListCard className="lg:col-span-1" />
                 </div>

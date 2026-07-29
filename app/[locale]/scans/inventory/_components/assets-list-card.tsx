@@ -1,64 +1,22 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter } from "next/navigation"
-import {
-  SearchIcon,
-  ServerIcon,
-  Globe,
-  Database,
-  Terminal,
-  Cloud,
-  KeyRound,
-  Network,
-} from "lucide-react"
-
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
-
 import { useInventoryAssets } from "@/hooks/assets/use-inventory-assets"
 import { cn } from "@/lib/utils"
-import { Asset } from "@/types/asset"
-
-const SEVERITY_STYLE: Record<Asset["severity"], string> = {
-  critical: "bg-red-500/15 text-red-600 border-red-500/30",
-  high: "bg-orange-500/15 text-orange-600 border-orange-500/30",
-  medium: "bg-yellow-500/15 text-yellow-700 border-yellow-500/30",
-  low: "bg-blue-500/15 text-blue-600 border-blue-500/30",
-  informational: "bg-muted text-muted-foreground border-transparent",
-}
-
-// Cohérent avec CATEGORIES (scan-results-view) et ASSET_TYPE_ICONS (geo-map) —
-// une icône par assetType, plutôt qu'un fallback générique unique.
-const ASSET_TYPE_ICON: Record<Asset["assetType"], React.ComponentType<{ className?: string }>> = {
-  web: Globe,
-  api: ServerIcon,
-  database: Database,
-  "remote-access": Terminal,
-  mail: Cloud,
-  authentication: KeyRound,
-  network: Network,
-  unknown: ServerIcon,
-}
-
-function primaryLabel(asset: Asset): string {
-  return asset.tags?.[0] ?? asset.os ?? "actif inconnu"
-}
+import { SearchIcon } from "lucide-react"
+import { AssetCard } from "./asset-card"
 
 interface AssetListCardProps {
   className?: string
 }
 
 export default function AssetListCard({ className }: AssetListCardProps) {
-  const router = useRouter()
   const { data: assets, isLoading, error } = useInventoryAssets()
   const [search, setSearch] = useState("")
-
   const assetsArray = Array.isArray(assets) ? assets : []
-
   const filtered = assetsArray.filter((asset) => {
     const query = search.toLowerCase()
     return (
@@ -71,16 +29,16 @@ export default function AssetListCard({ className }: AssetListCardProps) {
   })
 
   return (
-    <Card className={cn("flex flex-col", className)}>
-      <CardHeader className="pb-3">
-        <CardTitle className="text-base flex items-center justify-between">
-          Tous
-          <span className="text-sm font-normal text-muted-foreground">
+    <div className={cn("flex flex-col", className)}>
+      <div className="pb-3 space-y-2">
+        <div className="flex items-center justify-between">
+          <h5 className="text-foreground">Tous</h5>
+          <span className="text-sm text-muted-foreground">
             {assetsArray.length} au total
           </span>
-        </CardTitle>
+        </div>
 
-        <div className="relative mt-2">
+        <div className="relative">
           <SearchIcon className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
           <Input
             placeholder="Rechercher (IP, hostname, tag, OS...)"
@@ -89,85 +47,33 @@ export default function AssetListCard({ className }: AssetListCardProps) {
             className="pl-8"
           />
         </div>
-      </CardHeader>
+      </div>
 
-      <CardContent className="flex-1 min-h-0 p-0">
+      <div className="flex-1 min-h-0">
         {isLoading ? (
-          <div className="space-y-2 px-4 pb-4">
+          <div className="space-y-2">
             {[1, 2, 3, 4, 5].map((i) => (
-              <Skeleton key={i} className="h-16 w-full" />
+              <Skeleton key={i} className="h-24 w-full rounded-xl" />
             ))}
           </div>
         ) : error ? (
-          <p className="px-4 pb-4 text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Impossible de charger les actifs.
           </p>
         ) : filtered.length === 0 ? (
-          <p className="px-4 pb-4 text-sm text-muted-foreground">
+          <p className="text-sm text-muted-foreground">
             Aucun actif ne correspond à ta recherche.
           </p>
         ) : (
-          <ScrollArea className="h-[480px] px-4 pb-4">
-            <div className="space-y-2">
-              {filtered.map((asset) => {
-                const severity = asset.severity ?? "informational"
-                const riskValue = asset.riskScore?.value ?? 0
-                const serviceCount = asset.services?.length ?? 0
-                const TypeIcon = ASSET_TYPE_ICON[asset.assetType] ?? ServerIcon
-                const hasFavicon = !!asset.http?.faviconUrl
-
-                return (
-                  <button
-                    key={asset._id}
-                    type="button"
-                    onClick={() => router.push(`/scans/${asset.scanId}/asset/${asset._id}`)}
-                    className="w-full flex items-start gap-3 rounded-lg border p-3 hover:bg-muted/50 transition-colors text-left"
-                  >
-                    <div className="mt-0.5 rounded-md bg-muted p-1.5 shrink-0 overflow-hidden size-7 flex items-center justify-center">
-                      {hasFavicon ? (
-                        // eslint-disable-next-line @next/next/no-img-element
-                        <img
-                          src={asset.http.faviconUrl}
-                          alt=""
-                          className="size-4 object-contain"
-                          onError={(e) => {
-                            e.currentTarget.style.display = "none"
-                          }}
-                        />
-                      ) : (
-                        <TypeIcon className="size-4 text-muted-foreground" />
-                      )}
-                    </div>
-
-                    <div className="flex-1 min-w-0 space-y-1">
-                      <div className="flex items-center justify-between gap-2">
-                        <p className="text-sm font-medium truncate">
-                          {asset.hostname || asset.rdns || asset.ipAddress}
-                        </p>
-                        <Badge
-                          variant="outline"
-                          className={cn("text-xs shrink-0", SEVERITY_STYLE[severity])}
-                        >
-                          {severity}
-                        </Badge>
-                      </div>
-
-                      <div className="flex flex-col gap-0.5 text-xs text-muted-foreground">
-                        <span>{asset.ipAddress}</span>
-                        <span className="truncate">{primaryLabel(asset)}</span>
-                        <div className="flex items-center gap-3">
-                          <span>{serviceCount} service{serviceCount > 1 ? "s" : ""}</span>
-                          {riskValue > 0 && <span>Score {riskValue.toFixed(1)}</span>}
-                        </div>
-                      </div>
-                    </div>
-                  </button>
-                )
-              })}
+          <ScrollArea className="h-[520px]">
+            <div className="space-y-8 pr-2">
+              {filtered.map((asset) => (
+                <AssetCard key={asset._id} asset={asset} />
+              ))}
             </div>
           </ScrollArea>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   )
 }

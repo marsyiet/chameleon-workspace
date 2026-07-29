@@ -75,15 +75,16 @@ export default function MapView({ points, onSelect, onTilesFailed }: MapViewProp
     const getIsDark = () => document.documentElement.classList.contains("dark")
 
     const map = L.map(mapDivRef.current, {
-      center: CAMEROON_CENTER,
-      zoom: 6,
-      minZoom: 5,
-      maxZoom: 14,
-      zoomControl: true,
-      attributionControl: true,
-      maxBounds: REGION_BOUNDS,
-      maxBoundsViscosity: 0.8,
-    })
+  center: CAMEROON_CENTER,
+  zoom: 7,        // était 6 — un cran de plus au chargement
+  minZoom: 6,
+  maxZoom: 14,
+  zoomControl: true,
+  attributionControl: true,
+  maxBounds: REGION_BOUNDS,
+  maxBoundsViscosity: 0.8,
+})
+map.fitBounds(REGION_BOUNDS)
     map.fitBounds(REGION_BOUNDS)
     map.getContainer().style.background = "transparent"
     mapRef.current = map
@@ -135,12 +136,12 @@ export default function MapView({ points, onSelect, onTilesFailed }: MapViewProp
     // bulles numérotées ; en zoomant, les clusters se scindent progressivement
     // jusqu'aux marqueurs individuels.
     clusterGroupRef.current = L.markerClusterGroup({
-      maxClusterRadius: 55,
-      spiderfyOnMaxZoom: true,
-      showCoverageOnHover: false,
-      zoomToBoundsOnClick: true,
-      iconCreateFunction: (cluster) => makeClusterIcon(cluster.getChildCount()),
-    })
+  maxClusterRadius: 35,   // était 55 — rayon de fusion plus petit
+  spiderfyOnMaxZoom: true,
+  showCoverageOnHover: false,
+  zoomToBoundsOnClick: true,
+  iconCreateFunction: (cluster) => makeClusterIcon(cluster.getChildCount()),
+})
     map.addLayer(clusterGroupRef.current)
 
     fetch(COUNTRIES_GEOJSON_URL)
