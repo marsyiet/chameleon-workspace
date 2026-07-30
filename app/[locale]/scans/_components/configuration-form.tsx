@@ -2,9 +2,10 @@
 
 import { useState } from "react"
 import { Controller, useFieldArray, UseFormReturn } from "react-hook-form"
-import { PlusIcon, TrashIcon, CalendarIcon } from "lucide-react"
+import { PlusIcon, TrashIcon, CalendarIcon, Binoculars } from "lucide-react"
 import { format } from "date-fns"
 
+import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
@@ -27,19 +28,44 @@ import { Calendar } from "@/components/ui/calendar"
 import { CreateScanFormValues } from "../_validators/create-scan-schema"
 import { useOrganizations } from "@/hooks/organizations/use-organizations"
 
+export type MetricAccent = "violet" | "teal" | "amber" | "rose"
+
+const ACCENT_STYLES: Record<MetricAccent, { icon: string; bar: string }> = {
+  violet: {
+    icon: "text-[oklch(0.58_0.26_290)]",
+    bar: "bg-[oklch(0.58_0.26_290)]",
+  },
+  teal: {
+    icon: "text-[oklch(0.60_0.14_180)]",
+    bar: "bg-[oklch(0.60_0.14_180)]",
+  },
+  amber: {
+    icon: "text-[oklch(0.68_0.16_70)]",
+    bar: "bg-[oklch(0.68_0.16_70)]",
+  },
+  rose: {
+    icon: "text-[oklch(0.62_0.21_10)]",
+    bar: "bg-[oklch(0.62_0.21_10)]",
+  },
+}
+
 interface ConfigurationFormProps {
   form: UseFormReturn<CreateScanFormValues>
   isPending: boolean
   onSubmit: (
     values: CreateScanFormValues
   ) => Promise<void>
+  accent?: MetricAccent
 }
 
 export default function ConfigurationForm({
   form,
   onSubmit,
   isPending,
+  accent = "violet",
 }: ConfigurationFormProps) {
+  const styles = ACCENT_STYLES[accent]
+
   const { fields, append, remove } = useFieldArray({
     control: form.control,
     name: "targets",
@@ -82,14 +108,15 @@ export default function ConfigurationForm({
   const isLaunching = isPending && pendingAction === "launch"
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle>
-          <h3>Scan Configuration</h3>
+    <Card className="group relative overflow-hidden rounded-xl border border-border bg-card">
+      <CardHeader className="border-b border-dashed border-border/80 pb-4">
+        <CardTitle className="flex items-center justify-center gap-2">
+          <Binoculars className={cn("h-8 w-8 shrink-0", styles.icon)} />
+          <h3 className="font-normal flex items-center justify-center">Scan Configuration</h3>
         </CardTitle>
       </CardHeader>
 
-      <CardContent>
+      <CardContent className="pt-6">
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <FieldGroup>
             <Controller
@@ -366,6 +393,16 @@ export default function ConfigurationForm({
           </FieldGroup>
         </form>
       </CardContent>
+
+      {/* Barre qui se remplit au hover */}
+      <div className="absolute bottom-0 left-0 h-1 w-full bg-border overflow-hidden">
+        <div
+          className={cn(
+            "h-full w-full origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100",
+            styles.bar
+          )}
+        />
+      </div>
     </Card>
   )
 }

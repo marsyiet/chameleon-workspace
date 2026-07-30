@@ -25,7 +25,7 @@ export default function ScansPage() {
   return (
     <div className="space-y-4">
       {/* ── Header ── */}
-      <h3 className=" text-foreground dark:text-white">
+      <h3 className="font-normal flex items-center justify-center py-8">
         Tous les scans
       </h3>
 

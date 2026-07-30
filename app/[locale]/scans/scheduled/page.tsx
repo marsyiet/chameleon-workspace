@@ -20,8 +20,8 @@ export default function ScheduledScansPage() {
 
   return (
     <div className="space-y-4">
-      <h3 className=" text-foreground dark:text-white">
-        Scheduled scans
+      <h3 className="font-normal flex items-center justify-center py-8">
+        Planification des scans
       </h3>
 
       {scans.length === 0 ? (

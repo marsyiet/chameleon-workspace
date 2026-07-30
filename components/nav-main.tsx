@@ -36,14 +36,8 @@ export function NavMain({
   const pathname = usePathname()
   const pathWithoutLocale = pathname.replace(/^\/[a-z]{2}(?=\/|$)/, "") || "/"
 
-  // Correspondance EXACTE pour les feuilles (top-level sans enfants, et
-  // sous-items) — sinon "/scans" reste actif dès qu'on est sur "/scans/new".
+  // Correspondance EXACTE pour les feuilles
   const isExactActive = (url: string) => pathWithoutLocale === url
-
-  // Correspondance par préfixe, réservée à la détection "un des enfants
-  // est actif" pour savoir si le groupe parent doit s'ouvrir/se colorer.
-  const isPrefixActive = (url: string) =>
-    pathWithoutLocale === url || pathWithoutLocale.startsWith(url + "/")
 
   return (
     <SidebarGroup>
@@ -109,8 +103,11 @@ export function NavMain({
                         <SidebarMenuSubItem key={subItem.title}>
                           <SidebarMenuSubButton
                             asChild
-                            isActive={subActive}
-                            className={cn(subActive && `${colors.activeBg} ${colors.icon}`)}
+                            isActive={false} // Désactive le style actif par défaut de Shadcn (bg)
+                            className={cn(
+                              "rounded-none bg-transparent hover:bg-transparent border-b-2 border-b-transparent transition-all px-1 py-0.5 h-auto",
+                              subActive && `border-b-amber-500 font-bold`
+                            )}
                           >
                             <Link href={subItem.url}>
                               <span>{subItem.title}</span>

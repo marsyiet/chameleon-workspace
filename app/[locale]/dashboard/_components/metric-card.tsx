@@ -37,19 +37,19 @@ export function MetricCard({ icon: Icon, label, value, isLoading, accent = "viol
   return (
     <div
       className={cn(
-        "group relative overflow-hidden rounded-xl border border-border bg-card px-4 py-3 transition-colors duration-200",
+        "group relative overflow-hidden rounded-xl border space-y-2 border-border bg-card px-4 py-3 transition-colors duration-200",
         "hover:bg-secondary/50"
       )}
     >
       <div className="flex items-center gap-2">
         <Icon className={cn("h-4 w-4 shrink-0", styles.icon)} />
-        <p className="text-xs font-medium text-foreground truncate">{label}</p>
+        <p className="font-medium text-foreground truncate">{label}</p>
       </div>
 
       {isLoading ? (
-        <div className="mt-1.5 h-7 w-16 rounded bg-muted animate-pulse" />
+        <div className="mt-1.5 h-8 w-16 rounded bg-muted animate-pulse" />
       ) : (
-        <p className="mt-1 text-2xl font-semibold text-foreground tabular-nums">
+        <p className="mt-1 text-3xl font-semibold text-foreground tabular-nums">
           {value.toLocaleString("fr-FR")}
         </p>
       )}

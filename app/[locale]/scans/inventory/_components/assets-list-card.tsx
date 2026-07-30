@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { Input } from "@/components/ui/input"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useInventoryAssets } from "@/hooks/assets/use-inventory-assets"
 import { cn } from "@/lib/utils"
@@ -17,6 +16,7 @@ export default function AssetListCard({ className }: AssetListCardProps) {
   const { data: assets, isLoading, error } = useInventoryAssets()
   const [search, setSearch] = useState("")
   const assetsArray = Array.isArray(assets) ? assets : []
+  
   const filtered = assetsArray.filter((asset) => {
     const query = search.toLowerCase()
     return (
@@ -29,11 +29,12 @@ export default function AssetListCard({ className }: AssetListCardProps) {
   })
 
   return (
-    <div className={cn("flex flex-col", className)}>
-      <div className="pb-3 space-y-2">
+    <div className={cn("flex flex-col space-y-4", className)}>
+      {/* En-tête + Barre de recherche */}
+      <div className="space-y-2.5">
         <div className="flex items-center justify-between">
-          <h5 className="text-foreground">Tous</h5>
-          <span className="text-sm text-muted-foreground">
+          <h5 className="text-foreground font-semibold">Tous</h5>
+          <span className="text-sm text-muted-foreground font-medium">
             {assetsArray.length} au total
           </span>
         </div>
@@ -49,29 +50,28 @@ export default function AssetListCard({ className }: AssetListCardProps) {
         </div>
       </div>
 
-      <div className="flex-1 min-h-0">
+      {/* Contenu principal sans contrainte de ScrollArea interne */}
+      <div>
         {isLoading ? (
-          <div className="space-y-2">
+          <div className="space-y-3">
             {[1, 2, 3, 4, 5].map((i) => (
               <Skeleton key={i} className="h-24 w-full rounded-xl" />
             ))}
           </div>
         ) : error ? (
-          <p className="text-sm text-muted-foreground">
+          <div className="p-4 rounded-xl border border-border bg-card text-muted-foreground text-sm">
             Impossible de charger les actifs.
-          </p>
+          </div>
         ) : filtered.length === 0 ? (
-          <p className="text-sm text-muted-foreground">
-            Aucun actif ne correspond à ta recherche.
-          </p>
+          <div className="p-4 rounded-xl border border-border bg-card text-muted-foreground text-sm">
+            Aucun actif ne correspond à votre recherche.
+          </div>
         ) : (
-          <ScrollArea className="h-[520px]">
-            <div className="space-y-8 pr-2">
-              {filtered.map((asset) => (
-                <AssetCard key={asset._id} asset={asset} />
-              ))}
-            </div>
-          </ScrollArea>
+          <div className="space-y-8">
+            {filtered.map((asset) => (
+              <AssetCard key={asset._id} asset={asset} />
+            ))}
+          </div>
         )}
       </div>
     </div>

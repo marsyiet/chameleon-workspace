@@ -1,5 +1,4 @@
 "use client"
-
 import { useParams, useRouter } from "next/navigation"
 import { useEffect, useRef } from "react"
 import L from "leaflet"
@@ -9,6 +8,7 @@ import {
   MapPin, Server, Clock, Building2, Tag, Network, ShieldAlert,
   KeyRound, FileText, Radio, Code2, Mail, Link2, Cpu,
   Fingerprint, Eye, Shield, AlertTriangle, CheckCircle2,
+  SquareArrowOutUpRight, UserCheck,
 } from "lucide-react"
 import { useAsset } from "@/hooks/assets/use-asset"
 import { Button } from "@/components/ui/button"
@@ -17,19 +17,30 @@ import { CveList } from "../../_components/cve-list"
 import { cn } from "@/lib/utils"
 
 /* ── Constantes de style ─────────────────────────────────────────────── */
-
-const SEVERITY_STYLE: Record<string, { bg: string; text: string; label: string }> = {
-  critical: { bg: "bg-red-500/15", text: "text-red-600 dark:text-red-400", label: "Critique" },
-  high:     { bg: "bg-orange-500/15", text: "text-orange-600 dark:text-orange-400", label: "Élevé" },
-  medium:   { bg: "bg-amber-500/15", text: "text-amber-600 dark:text-amber-400", label: "Moyen" },
-  low:      { bg: "bg-blue-500/15", text: "text-blue-600 dark:text-blue-400", label: "Faible" },
-  informational: { bg: "bg-muted", text: "text-muted-foreground", label: "Informationnel" },
+const SEVERITY_STYLE: Record<string, { bg: string; text: string; label: string; bar: string }> = {
+  critical: { bg: "bg-red-500/15", text: "text-red-600 dark:text-red-400", label: "Critique", bar: "bg-red-500" },
+  high:     { bg: "bg-orange-500/15", text: "text-orange-600 dark:text-orange-400", label: "Élevé", bar: "bg-orange-500" },
+  medium:   { bg: "bg-amber-500/15", text: "text-amber-600 dark:text-amber-400", label: "Moyen", bar: "bg-amber-500" },
+  low:      { bg: "bg-blue-500/15", text: "text-blue-600 dark:text-blue-400", label: "Faible", bar: "bg-blue-500" },
+  informational: { bg: "bg-muted", text: "text-muted-foreground", label: "Informationnel", bar: "bg-primary" },
 }
 
 const CONFIDENCE_LABEL: Record<string, string> = {
   certaine: "Certaine",
   probable: "Probable",
   faible: "Faible",
+}
+
+const OWNER_SOURCE_LABEL: Record<string, string> = {
+  declared:     "Déclaré lors du scan",
+  tls_subject:  "Certificat TLS (subject)",
+  tls_san:      "Certificat TLS (SAN)",
+  rdns:         "DNS inverse",
+  hostname:     "Nom d'hôte",
+  http_title:   "Titre de la page",
+  banner:       "Bannière protocolaire",
+  snmp_sysname: "SNMP sysName",
+  whois_ip:     "WHOIS IP",
 }
 
 const ROLE_LABEL: Record<string, string> = {
@@ -65,14 +76,25 @@ const ROLE_ICON: Record<string, any> = {
   unknown: Server,
 }
 
-/* Tag orange-chaud pour les rôles */
 const ROLE_TAG = "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
 const ROLE_TAG_PRIMARY = "bg-amber-500/20 text-amber-900 dark:bg-amber-500/25 dark:text-amber-200 font-semibold"
 
 /* ── Composants utilitaires ──────────────────────────────────────────── */
-
 function Dashed() {
-  return <div className="border-t border-dashed border-border/60 my-4" />
+  return <div className="border-t-2 border-dashed border-border my-4" />
+}
+
+function HoverBar({ colorClass = "bg-primary" }: { colorClass?: string }) {
+  return (
+    <div className="absolute bottom-0 left-0 h-0.5 w-full bg-border overflow-hidden">
+      <div
+        className={cn(
+          "h-full w-full origin-left scale-x-0 transition-transform duration-300 ease-out group-hover:scale-x-100",
+          colorClass
+        )}
+      />
+    </div>
+  )
 }
 
 function Field({ label, value, mono = false }: { label: string; value: any; mono?: boolean }) {
@@ -113,7 +135,6 @@ function serviceIcon(service: string | undefined) {
 }
 
 /* ── Mini-carte Leaflet ──────────────────────────────────────────────── */
-
 function LocationCard({ asset }: { asset: any }) {
   const mapDivRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<L.Map | null>(null)
@@ -123,7 +144,6 @@ function LocationCard({ asset }: { asset: any }) {
     if (!hasGeo || !mapDivRef.current || mapRef.current) return
     const isDark = document.documentElement.classList.contains("dark")
     const coords: [number, number] = [asset.geo.lat, asset.geo.lon]
-
     const map = L.map(mapDivRef.current, {
       center: coords, zoom: 9, zoomControl: false, dragging: false,
       scrollWheelZoom: false, doubleClickZoom: false, attributionControl: false,
@@ -167,7 +187,6 @@ function LocationCard({ asset }: { asset: any }) {
 }
 
 /* ── Page principale ─────────────────────────────────────────────────── */
-
 export default function AssetDetailPage() {
   const params = useParams()
   const router = useRouter()
@@ -177,41 +196,42 @@ export default function AssetDetailPage() {
   if (isLoading) return <div className="w-full h-full flex items-center justify-center"><LoaderGlobal /></div>
   if (!asset) return <div className="p-8 text-muted-foreground">Actif introuvable</div>
 
-  const allCves = asset.services.flatMap((svc: any) => svc.cves ?? [])
   const severity = SEVERITY_STYLE[asset.severity] ?? SEVERITY_STYLE.informational
   const primaryRole = asset.primaryRoleForDisplay ?? "unknown"
-  const PrimaryIcon = ROLE_ICON[primaryRole] ?? Server
   const roles = asset.natureRoles ?? []
   const identity = asset.identity ?? {}
   const authSurfaces = asset.authenticationSurfaces ?? []
   const hasDns = asset.dns && (asset.dns.a?.length || asset.dns.aaaa?.length || asset.dns.mx?.length || asset.dns.ns?.length || asset.dns.txt?.length)
   const hasSubdomains = (asset.subdomainsDiscovered?.length ?? 0) > 0
   const hasWhois = asset.whois?.ipNetwork?.name || asset.whois?.domain?.registrar
+  const ownerOrg = asset.ownerOrganization
 
   return (
     <div className="w-full mx-auto space-y-6">
-
       <Button variant="ghost" size="sm" onClick={() => router.back()}>
         <ArrowLeft className="h-3.5 w-3.5" />
         Retour aux résultats
       </Button>
 
       {/* ═══════════════════ HEADER ═══════════════════ */}
-      <div className="rounded-2xl border border-border bg-card px-6 py-6">
+      <div className="group relative overflow-hidden rounded-2xl border border-border bg-card px-6 py-6 transition-colors duration-200 hover:bg-secondary/50">
         <div className="flex flex-col sm:flex-row items-start gap-5">
           <div className="flex-1 min-w-0 space-y-4">
-
             {/* Titre + IP */}
             <div className="flex items-start gap-3">
-              <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-amber-500/15">
-                <PrimaryIcon className="h-5 w-5 text-amber-700 dark:text-amber-400" />
-              </div>
               <div className="min-w-0">
-                <h2 className="text-xl font-bold text-foreground truncate">{asset.hostname || asset.ipAddress}</h2>
-                {asset.hostname && <p className="text-sm text-muted-foreground font-mono mt-0.5">{asset.ipAddress}</p>}
+                <a
+                  href={`http://${asset.hostname || asset.ipAddress}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="group/link flex items-center gap-2 mb-1 cursor-pointer text-foreground"
+                >
+                  <h2 className="font-bold truncate">{asset.hostname || asset.ipAddress}</h2>
+                  <SquareArrowOutUpRight className="h-4 w-4 shrink-0 opacity-0 scale-90 transition-all duration-200 group-hover/link:opacity-100 group-hover/link:scale-100" />
+                </a>
+                {asset.hostname && <h5 className="text-muted-foreground font-mono mt-0.5">{asset.ipAddress}</h5>}
               </div>
             </div>
-
             {/* Rôles (tags orange) */}
             <div className="flex flex-wrap items-center gap-2">
               {roles.map((r: any) => {
@@ -228,7 +248,6 @@ export default function AssetDetailPage() {
                 {severity.label}
               </span>
             </div>
-
             {/* Identité fabricant */}
             {identity.vendor && (
               <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
@@ -239,22 +258,21 @@ export default function AssetDetailPage() {
                 <span className="text-xs text-muted-foreground/70">confiance : {CONFIDENCE_LABEL[identity.vendorConfidence] ?? identity.vendorConfidence}</span>
               </div>
             )}
-
             {/* Tags techniques */}
             {(asset.tags?.length ?? 0) > 0 && (
               <div className="flex flex-wrap gap-1.5">
                 {asset.tags.map((t: string) => (
-                  <span key={t} className="text-xs px-2 py-1 rounded-lg bg-secondary text-secondary-foreground font-mono">{t}</span>
+                  <div key={t} className="text-xs flex gap-1 items-center justify-center px-2 py-1 rounded-lg bg-secondary text-secondary-foreground font-mono">
+                    <Tag className="size-3.5" />
+                    <span>{t}</span>
+                  </div>
                 ))}
               </div>
             )}
           </div>
-
           <LocationCard asset={asset} />
         </div>
-
         <Dashed />
-
         {/* Stats clés */}
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-6">
           <div>
@@ -279,6 +297,7 @@ export default function AssetDetailPage() {
             <p className="text-base font-semibold text-foreground truncate">{asset.os ?? "—"}</p>
           </div>
         </div>
+        <HoverBar colorClass={severity.bar} />
       </div>
 
       {/* ═══════════════════ DÉTAILS ═══════════════════ */}
@@ -286,7 +305,7 @@ export default function AssetDetailPage() {
 
         {/* ── Rôles et preuves ── */}
         {roles.length > 0 && (
-          <div className="rounded-xl border border-border bg-card p-5">
+          <div className="group relative overflow-hidden rounded-xl border border-border bg-card p-5 transition-colors duration-200 hover:bg-secondary/50">
             <SectionTitle icon={Fingerprint} title="Rôles détectés" />
             <div className="space-y-3">
               {roles.map((r: any) => {
@@ -309,12 +328,13 @@ export default function AssetDetailPage() {
                 )
               })}
             </div>
+            <HoverBar colorClass="bg-amber-500" />
           </div>
         )}
 
-        {/* ── Attribution ── */}
-        <div className="rounded-xl border border-border bg-card p-5">
-          <SectionTitle icon={Building2} title="Attribution" />
+        {/* ── Attribution réseau ── */}
+        <div className="group relative overflow-hidden rounded-xl border border-border bg-card p-5 transition-colors duration-200 hover:bg-secondary/50">
+          <SectionTitle icon={Building2} title="Propriétaire du bloc IP" />
           <p className="text-base font-semibold text-foreground">{asset.attribution?.guessedOrganizationName ?? "Non attribué"}</p>
           {asset.attribution?.confidence && (
             <p className="text-sm text-muted-foreground mt-1">Confiance : {CONFIDENCE_LABEL[asset.attribution.confidence] ?? asset.attribution.confidence}</p>
@@ -327,11 +347,26 @@ export default function AssetDetailPage() {
             </div>
           )}
           {asset.asn?.org && <p className="text-sm text-muted-foreground mt-3">{asset.asn.asn} · {asset.asn.org}</p>}
+          <HoverBar />
         </div>
+
+        {/* ── Organisation exploitante ── */}
+        {ownerOrg && (
+          <div className="group relative overflow-hidden rounded-xl border border-border bg-card p-5 transition-colors duration-200 hover:bg-secondary/50">
+            <SectionTitle icon={UserCheck} title="Organisation exploitante" />
+            <p className="text-base font-semibold text-foreground">{ownerOrg.name}</p>
+            <p className="text-sm text-muted-foreground mt-1">
+              {OWNER_SOURCE_LABEL[ownerOrg.source] ?? ownerOrg.source}
+              {" · "}
+              Confiance : {CONFIDENCE_LABEL[ownerOrg.confidence] ?? ownerOrg.confidence}
+            </p>
+            <HoverBar colorClass="bg-amber-500" />
+          </div>
+        )}
 
         {/* ── Surfaces d'authentification ── */}
         {authSurfaces.length > 0 && (
-          <div className="rounded-xl border border-border bg-card p-5">
+          <div className="group relative overflow-hidden rounded-xl border border-border bg-card p-5 transition-colors duration-200 hover:bg-secondary/50">
             <SectionTitle icon={KeyRound} title={`Surfaces d'authentification (${authSurfaces.length})`} />
             <div className="space-y-3">
               {authSurfaces.map((s: any, i: number) => (
@@ -347,11 +382,12 @@ export default function AssetDetailPage() {
                 </div>
               ))}
             </div>
+            <HoverBar colorClass="bg-amber-500" />
           </div>
         )}
 
         {/* ── Suivi ── */}
-        <div className="rounded-xl border border-border bg-card p-5">
+        <div className="group relative overflow-hidden rounded-xl border border-border bg-card p-5 transition-colors duration-200 hover:bg-secondary/50">
           <SectionTitle icon={Clock} title="Suivi" />
           <div className="space-y-2 text-sm">
             <p className="text-muted-foreground">
@@ -367,11 +403,12 @@ export default function AssetDetailPage() {
               </p>
             )}
           </div>
+          <HoverBar />
         </div>
 
         {/* ── WHOIS ── */}
         {hasWhois && (
-          <div className="rounded-xl border border-border bg-card p-5">
+          <div className="group relative overflow-hidden rounded-xl border border-border bg-card p-5 transition-colors duration-200 hover:bg-secondary/50">
             <SectionTitle icon={FileText} title="WHOIS" />
             <div className="space-y-2 text-sm">
               {asset.whois?.ipNetwork?.name && (
@@ -387,22 +424,23 @@ export default function AssetDetailPage() {
                 <p className="text-muted-foreground">NS : <span className="text-foreground font-mono text-xs">{asset.whois.domain.nameservers.join(", ")}</span></p>
               )}
             </div>
+            <HoverBar />
           </div>
         )}
       </div>
 
       {/* ── DNS ── */}
       {hasDns && (
-        <div className="rounded-xl border border-border bg-card p-5">
+        <div className="group relative overflow-hidden rounded-xl border border-border bg-card p-5 transition-colors duration-200 hover:bg-secondary/50">
           <SectionTitle icon={Network} title="Enregistrements DNS" />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8">
-            <div className="divide-y divide-dashed divide-border/60">
+            <div className="divide-y-2 divide-dashed divide-border">
               <Field label="IPv4 (A)" value={asset.dns.a} mono />
               <Field label="IPv6 (AAAA)" value={asset.dns.aaaa} mono />
               <Field label="Mail (MX)" value={asset.dns.mx} mono />
               <Field label="Noms (NS)" value={asset.dns.ns} mono />
             </div>
-            <div className="divide-y divide-dashed divide-border/60">
+            <div className="divide-y-2 divide-dashed divide-border">
               <Field label="TXT" value={asset.dns.txt} mono />
               {asset.dns.spfValid !== null && asset.dns.spfValid !== undefined && (
                 <Field label="SPF" value={asset.dns.spfValid ? "Valide" : "Absent"} />
@@ -415,30 +453,29 @@ export default function AssetDetailPage() {
               )}
             </div>
           </div>
+          <HoverBar />
         </div>
       )}
 
       {/* ── Sous-domaines ── */}
       {hasSubdomains && (
-        <div className="rounded-xl border border-border bg-card p-5">
+        <div className="group relative overflow-hidden rounded-xl border border-border bg-card p-5 transition-colors duration-200 hover:bg-secondary/50">
           <SectionTitle icon={Globe} title={`Sous-domaines découverts (${asset.subdomainsDiscovered.length})`} />
           <div className="flex flex-wrap gap-2">
             {asset.subdomainsDiscovered.map((s: any) => (
               <span key={s.subdomain} className="text-sm px-3 py-1.5 rounded-lg bg-secondary text-secondary-foreground font-mono">{s.subdomain}</span>
             ))}
           </div>
+          <HoverBar />
         </div>
       )}
 
       {/* ═══════════════════ SERVICES ═══════════════════ */}
       <div className="space-y-5">
         <h3 className="text-lg font-semibold text-foreground">Services détectés ({asset.services.length})</h3>
-
-        {asset.services.map((svc: any, svcIdx: number) => (
-          <div key={`${svc.port}-${svc.protocol}`} className="rounded-xl border border-border bg-card overflow-hidden">
-
-            {/* En-tête du service */}
-            <div className="flex items-center gap-3 flex-wrap px-5 py-4 bg-muted/50">
+        {asset.services.map((svc: any) => (
+          <div key={`${svc.port}-${svc.protocol}`} className="group relative overflow-hidden rounded-xl border border-border bg-card transition-colors duration-200 hover:bg-secondary/50">
+            <div className="flex items-center gap-3 flex-wrap px-5 py-4 bg-muted/50 transition-colors group-hover:bg-muted/70">
               <span className="text-muted-foreground">{serviceIcon(svc.service)}</span>
               <span className="text-base font-mono font-bold px-2.5 py-1 rounded-lg bg-secondary border border-border">
                 {svc.port}/{svc.protocol}
@@ -448,14 +485,10 @@ export default function AssetDetailPage() {
                 {svc.version && <span className="text-muted-foreground font-normal ml-2">{svc.version}</span>}
               </span>
             </div>
-
-            {/* Contenu du service — séparé par des lignes dashed */}
             <div className="px-5 py-4">
-
               {svc.banner && (
                 <p className="text-sm text-muted-foreground font-mono mb-3">{svc.banner}</p>
               )}
-
               {/* HTTP */}
               {svc.http && svc.http.statusCode && (
                 <>
@@ -475,7 +508,6 @@ export default function AssetDetailPage() {
                       </p>
                     </div>
                   </div>
-
                   {(svc.http.technologies?.length ?? 0) > 0 && (
                     <div className="flex flex-wrap gap-1.5 mb-3">
                       {svc.http.technologies.map((tech: string) => (
@@ -483,13 +515,11 @@ export default function AssetDetailPage() {
                       ))}
                     </div>
                   )}
-
                   {svc.http.isApi && (
                     <p className="text-sm font-medium text-amber-700 dark:text-amber-400 flex items-center gap-1.5 mb-3">
                       <Code2 className="h-4 w-4" /> Détecté comme API
                     </p>
                   )}
-
                   {(svc.http.loginPoints?.length ?? 0) > 0 && (
                     <>
                       <Dashed />
@@ -503,7 +533,6 @@ export default function AssetDetailPage() {
                       ))}
                     </>
                   )}
-
                   {(svc.http.sensitiveFilesFound?.length ?? 0) > 0 && (
                     <>
                       <Dashed />
@@ -515,11 +544,10 @@ export default function AssetDetailPage() {
                       ))}
                     </>
                   )}
-
                   {svc.http.headers && Object.keys(svc.http.headers).length > 0 && (
                     <>
                       <Dashed />
-                      <details className="group">
+                      <details className="group/details">
                         <summary className="text-sm font-medium text-muted-foreground cursor-pointer flex items-center gap-1.5 hover:text-foreground">
                           <Code2 className="h-4 w-4" /> En-têtes HTTP
                         </summary>
@@ -529,11 +557,10 @@ export default function AssetDetailPage() {
                       </details>
                     </>
                   )}
-
                   {svc.http.bodyPreview && (
                     <>
                       <Dashed />
-                      <details className="group">
+                      <details className="group/details">
                         <summary className="text-sm font-medium text-muted-foreground cursor-pointer flex items-center gap-1.5 hover:text-foreground">
                           <Code2 className="h-4 w-4" /> Aperçu de la réponse
                         </summary>
@@ -545,7 +572,6 @@ export default function AssetDetailPage() {
                   )}
                 </>
               )}
-
               {/* TLS */}
               {svc.tls?.subject && (
                 <>
@@ -563,7 +589,6 @@ export default function AssetDetailPage() {
                   </div>
                 </>
               )}
-
               {/* SNMP */}
               {svc.snmp?.sysDescr && (
                 <>
@@ -580,7 +605,6 @@ export default function AssetDetailPage() {
                   </div>
                 </>
               )}
-
               {/* FTP */}
               {svc.ftp && svc.ftp.anonymousLoginAllowed !== null && (
                 <>
@@ -593,7 +617,6 @@ export default function AssetDetailPage() {
                   </p>
                 </>
               )}
-
               {/* DevOps tool */}
               {svc.devopsTool?.toolType && (
                 <>
@@ -604,16 +627,22 @@ export default function AssetDetailPage() {
                   </p>
                 </>
               )}
-
               {/* CVE */}
               {(svc.cves?.length ?? 0) > 0 && (
                 <>
                   <Dashed />
-                  <p className="text-sm font-semibold text-foreground mb-3">Vulnérabilités ({svc.cves.length})</p>
-                  <CveList cves={svc.cves} />
+                  <details className="group/details">
+                    <summary className="text-sm font-medium text-muted-foreground cursor-pointer flex items-center gap-1.5 hover:text-foreground">
+                      <ShieldAlert className="h-4 w-4" /> Vulnérabilités ({svc.cves.length})
+                    </summary>
+                    <div className="mt-3">
+                      <CveList cves={svc.cves} />
+                    </div>
+                  </details>
                 </>
               )}
             </div>
+            <HoverBar colorClass={(svc.cves?.length ?? 0) > 0 ? "bg-red-500" : "bg-primary"} />
           </div>
         ))}
       </div>
