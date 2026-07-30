@@ -3,25 +3,61 @@
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import {
-  AlertTriangle, MapPin, ChevronDown, Server as ServerIcon,
-  Globe2, Clock,
+  MapPin, ChevronDown, Server, Globe2, Clock,
+  Database, Lock, TerminalIcon, KeyRound, Code2,
+  Shield, Mail, Network, FileText, Cpu, Radio, Plug,
+  AlertTriangle,
 } from "lucide-react"
 import { Asset } from "@/types/asset"
 import { cn } from "@/lib/utils"
-import { formatNatureTag, NATURE_ICON, NATURE_LABEL } from "../../_constants/nature-types"
+
+/* ── Style ───────────────────────────────────────────────────────────── */
 
 const SEVERITY_STYLE: Record<string, { bg: string; text: string; label: string }> = {
   critical: { bg: "bg-red-500/15", text: "text-red-600 dark:text-red-400", label: "Critique" },
-  high: { bg: "bg-orange-500/15", text: "text-orange-600 dark:text-orange-400", label: "Élevé" },
-  medium: { bg: "bg-amber-500/15", text: "text-amber-600 dark:text-amber-400", label: "Moyen" },
-  low: { bg: "bg-blue-500/15", text: "text-blue-600 dark:text-blue-400", label: "Faible" },
+  high:     { bg: "bg-orange-500/15", text: "text-orange-600 dark:text-orange-400", label: "Élevé" },
+  medium:   { bg: "bg-amber-500/15", text: "text-amber-600 dark:text-amber-400", label: "Moyen" },
+  low:      { bg: "bg-blue-500/15", text: "text-blue-600 dark:text-blue-400", label: "Faible" },
   informational: { bg: "bg-muted", text: "text-muted-foreground", label: "Info" },
 }
 
-// Orange chaud, complémentaire au violet signature — seul accent utilisé
-// pour le tag de nature principal, cohérent avec le radius global de l'app.
-const NATURE_TAG_STYLE = "bg-[oklch(0.70_0.17_45_/_0.16)] text-[oklch(0.42_0.15_45)] dark:bg-[oklch(0.70_0.17_45_/_0.22)] dark:text-[oklch(0.82_0.15_45)]"
-const SECONDARY_TAG_STYLE = "bg-[oklch(0.58_0.26_290_/_0.10)] text-[oklch(0.42_0.20_290)] dark:bg-[oklch(0.58_0.26_290_/_0.18)] dark:text-[oklch(0.78_0.18_290)]"
+const ROLE_LABEL: Record<string, string> = {
+  firewall_router: "Pare-feu / Routeur",
+  vpn_gateway: "Passerelle VPN",
+  industrial_control: "Contrôle industriel",
+  database: "Base de données",
+  remote_access: "Accès distant",
+  mail_server: "Serveur mail",
+  dns_server: "Serveur DNS",
+  file_transfer: "Transfert de fichiers",
+  authentication_portal: "Portail d'auth.",
+  api: "API",
+  devops_tool: "Outil DevOps",
+  iot_device: "Objet connecté",
+  network_device_generic: "Équipement réseau",
+  web_application: "Application web",
+  unknown: "Non identifié",
+}
+
+const ROLE_ICON: Record<string, any> = {
+  firewall_router: Shield,
+  vpn_gateway: Lock,
+  database: Database,
+  remote_access: TerminalIcon,
+  mail_server: Mail,
+  dns_server: Network,
+  file_transfer: FileText,
+  authentication_portal: KeyRound,
+  api: Code2,
+  web_application: Globe2,
+  network_device_generic: Cpu,
+  unknown: Server,
+}
+
+const ROLE_TAG = "bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300"
+const ROLE_TAG_PRIMARY = "bg-amber-500/20 text-amber-900 dark:bg-amber-500/25 dark:text-amber-200 font-semibold"
+
+/* ── Composant ───────────────────────────────────────────────────────── */
 
 interface AssetCardProps {
   asset: Asset
@@ -41,135 +77,125 @@ export function AssetCard({ asset, className }: AssetCardProps) {
   const cveCount = allCves.length
   const highCveCount = allCves.filter((c) => (c.cvss ?? 0) >= 7).length
 
-  const natureType = asset.natureType ?? "unknown"
-  const NatureIcon = NATURE_ICON[natureType] ?? ServerIcon
-  const natureLabel = NATURE_LABEL[natureType] ?? NATURE_LABEL.unknown
-  const secondaryTags = (asset.natureTags ?? []).filter(
-    (t) => t !== natureType.replace(/_/g, "-")
-  )
+  const primaryRole = asset.primaryRoleForDisplay ?? "unknown"
+  const PrimaryIcon = ROLE_ICON[primaryRole] ?? Server
+  const roles = asset.natureRoles ?? []
+  const secondaryRoles = roles.filter((r: any) => r.role !== primaryRole)
   const severity = SEVERITY_STYLE[asset.severity] ?? SEVERITY_STYLE.informational
+  const identity = asset.identity ?? {}
+  const authCount = asset.authenticationSurfaces?.length ?? 0
 
-  const goToDetail = () => router.push(`/scans/${asset.scanId}/asset/${asset._id}`)
+  const goToDetail = () => router.push(`/scans/${asset.lastScanId}/asset/${asset._id}`)
 
   return (
-    <div
-      className={cn(
-        "rounded-xl border border-border overflow-hidden transition-shadow hover:shadow-md",
-        className
-      )}
-    >
-      {/* Header contrasté */}
-      <div
-        onClick={goToDetail}
-        className="bg-muted/70 px-5 py-4 space-y-3 cursor-pointer"
-      >
+    <div className={cn("rounded-xl border border-border overflow-hidden transition-shadow hover:shadow-md", className)}>
+
+      {/* ── Header ── */}
+      <div onClick={goToDetail} className="bg-muted/50 px-5 py-4 space-y-3 cursor-pointer">
+
         <div className="flex items-start justify-between gap-3">
-          <div className="min-w-0">
-            <p className="text-xl font-bold font-mono text-foreground truncate leading-tight">
-              {primary}
-            </p>
-            {secondary && (
-              <p className="text-sm font-mono text-muted-foreground truncate mt-0.5">
-                {secondary}
-              </p>
-            )}
+          <div className="min-w-0 flex items-center gap-3">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-amber-500/15">
+              <PrimaryIcon className="h-4.5 w-4.5 text-amber-700 dark:text-amber-400" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-lg font-bold font-mono text-foreground truncate leading-tight">{primary}</p>
+              {secondary && <p className="text-sm font-mono text-muted-foreground truncate mt-0.5">{secondary}</p>}
+            </div>
           </div>
-          <span
-            className={cn(
-              "shrink-0 rounded-lg px-2.5 py-1 text-sm font-bold tabular-nums",
-              severity.bg, severity.text
-            )}
-          >
+          <span className={cn("shrink-0 rounded-lg px-2.5 py-1.5 text-base font-bold tabular-nums", severity.bg, severity.text)}>
             {asset.riskScore?.value?.toFixed(1) ?? "0.0"}
           </span>
         </div>
 
+        {/* Rôles */}
         <div className="flex flex-wrap items-center gap-1.5">
-          <span
-            className={cn(
-              "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold",
-              NATURE_TAG_STYLE
-            )}
-          >
-            <NatureIcon className="h-4 w-4" />
-            {natureLabel}
+          <span className={cn("inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm", ROLE_TAG_PRIMARY)}>
+            <PrimaryIcon className="h-3.5 w-3.5" />
+            {ROLE_LABEL[primaryRole] ?? primaryRole}
           </span>
-          {secondaryTags.slice(0, 3).map((tag) => (
-            <span
-              key={tag}
-              className={cn(
-                "inline-flex items-center rounded-lg px-2.5 py-1.5 text-sm font-medium",
-                SECONDARY_TAG_STYLE
-              )}
-            >
-              {formatNatureTag(tag)}
-            </span>
-          ))}
+          {secondaryRoles.slice(0, 2).map((r: any) => {
+            const Icon = ROLE_ICON[r.role] ?? Server
+            return (
+              <span key={r.role} className={cn("inline-flex items-center gap-1 rounded-lg px-2.5 py-1.5 text-sm", ROLE_TAG)}>
+                <Icon className="h-3.5 w-3.5" />
+                {ROLE_LABEL[r.role] ?? r.role}
+              </span>
+            )
+          })}
+          {secondaryRoles.length > 2 && (
+            <span className="text-sm text-muted-foreground">+{secondaryRoles.length - 2}</span>
+          )}
         </div>
+
+        {/* Identité fabricant */}
+        {identity.vendor && (
+          <p className="text-sm text-muted-foreground">
+            {identity.vendor}
+            {identity.model && <span className="ml-1.5">{identity.model}</span>}
+            {identity.deviceLabel && <span className="ml-1.5 font-mono">({identity.deviceLabel})</span>}
+          </p>
+        )}
       </div>
 
-      {/* Corps : stats clés, couleur qui porte du sens */}
+      {/* ── Corps ── */}
       <div className="px-5 py-4 space-y-4">
+
         <div className="grid grid-cols-3 gap-3">
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">Sévérité</p>
-            <p className={cn("text-sm font-semibold", severity.text)}>
-              {severity.label}
-            </p>
+          <div>
+            <p className="text-sm text-muted-foreground">Sévérité</p>
+            <p className={cn("text-sm font-semibold mt-0.5", severity.text)}>{severity.label}</p>
           </div>
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">Services</p>
-            <p className="text-sm font-semibold text-foreground">
-              {services.length}
-            </p>
+          <div>
+            <p className="text-sm text-muted-foreground">Services</p>
+            <p className="text-sm font-semibold text-foreground mt-0.5">{services.length}</p>
           </div>
-          <div className="space-y-1">
-            <p className="text-xs text-muted-foreground">CVE</p>
-            <p className={cn(
-              "text-sm font-semibold",
-              cveCount > 0 ? "text-destructive" : "text-foreground"
-            )}>
-              {cveCount > 0 ? `${cveCount} (${highCveCount} critique)` : "Aucune"}
+          <div>
+            <p className="text-sm text-muted-foreground">CVE</p>
+            <p className={cn("text-sm font-semibold mt-0.5", cveCount > 0 ? "text-red-600 dark:text-red-400" : "text-foreground")}>
+              {cveCount > 0 ? `${cveCount} (${highCveCount} ≥ 7.0)` : "Aucune"}
             </p>
           </div>
         </div>
 
-        {asset.geo?.city && (
-          <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
-            <MapPin className="h-3.5 w-3.5 shrink-0 text-[oklch(0.60_0.14_180)]" />
-            {[asset.geo.city, asset.geo.country].filter(Boolean).join(", ")}
+        {(asset.geo?.city || authCount > 0) && (
+          <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
+            {asset.geo?.city && (
+              <span className="flex items-center gap-1.5">
+                <MapPin className="h-3.5 w-3.5 text-amber-600" />
+                {[asset.geo.city, asset.geo.country].filter(Boolean).join(", ")}
+              </span>
+            )}
+            {authCount > 0 && (
+              <span className="flex items-center gap-1.5 text-amber-700 dark:text-amber-400">
+                <KeyRound className="h-3.5 w-3.5" />
+                {authCount} surface{authCount > 1 ? "s" : ""} d'auth.
+              </span>
+            )}
           </div>
         )}
 
-        {/* Accordéon détails */}
+        {/* Accordéon */}
         <button
           type="button"
-          onClick={(e) => {
-            e.stopPropagation()
-            setExpanded((v) => !v)
-          }}
-          className="w-full flex items-center justify-between text-sm font-medium text-muted-foreground hover:text-foreground transition-colors pt-2 border-t border-border"
+          onClick={(e) => { e.stopPropagation(); setExpanded((v) => !v) }}
+          className="w-full flex items-center justify-between text-sm font-medium text-muted-foreground hover:text-foreground transition-colors pt-2 border-t border-dashed border-border/60"
         >
-          Voir plus
-          <ChevronDown
-            className={cn("h-4 w-4 transition-transform", expanded && "rotate-180")}
-          />
+          Détails
+          <ChevronDown className={cn("h-4 w-4 transition-transform", expanded && "rotate-180")} />
         </button>
 
         {expanded && (
           <div className="space-y-3 pt-1">
+
             {services.length > 0 && (
-              <div className="space-y-1.5">
-                <p className="text-xs font-medium text-muted-foreground">Ports ouverts</p>
+              <div className="space-y-2">
+                <p className="text-sm font-medium text-muted-foreground">Ports ouverts</p>
                 <div className="flex flex-wrap gap-1.5">
                   {services.map((svc) => (
-                    <span
-                      key={`${svc.port}-${svc.protocol}`}
-                      className="inline-flex items-center gap-1 rounded-lg bg-secondary px-2 py-1 text-xs font-mono text-secondary-foreground"
-                    >
-                      <Globe2 className="h-3 w-3" />
+                    <span key={`${svc.port}-${svc.protocol}`} className="inline-flex items-center gap-1 rounded-lg bg-secondary px-2.5 py-1.5 text-sm font-mono text-secondary-foreground">
                       {svc.port}/{svc.protocol}
-                      {svc.product && <span className="text-muted-foreground">· {svc.product}</span>}
+                      {svc.product && <span className="text-muted-foreground ml-1">· {svc.product}</span>}
                     </span>
                   ))}
                 </div>
@@ -177,32 +203,32 @@ export function AssetCard({ asset, className }: AssetCardProps) {
             )}
 
             {(asset.subdomainsDiscovered?.length ?? 0) > 0 && (
-              <div className="space-y-1">
-                <p className="text-xs font-medium text-muted-foreground">
-                  {asset.subdomainsDiscovered!.length} sous-domaine(s) découvert(s)
-                </p>
-              </div>
+              <p className="text-sm text-muted-foreground">
+                {asset.subdomainsDiscovered!.length} sous-domaine(s) découvert(s)
+              </p>
+            )}
+
+            {asset.humanVector?.exposed && (
+              <p className="text-sm font-medium text-amber-700 dark:text-amber-400 flex items-center gap-1.5">
+                <AlertTriangle className="h-4 w-4" /> Point d'authentification exposé
+              </p>
             )}
 
             {asset.os && (
-              <div className="space-y-1">
-                <p className="text-xs font-medium text-muted-foreground">Système</p>
-                <p className="text-sm text-foreground">{asset.os}</p>
-              </div>
+              <p className="text-sm text-muted-foreground">
+                Système : <span className="text-foreground">{asset.os}</span>
+              </p>
             )}
 
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
-              <Clock className="h-3 w-3" />
+            <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
+              <Clock className="h-3.5 w-3.5" />
               Dernière détection : {new Date(asset.lastSeenAt).toLocaleDateString("fr-FR")}
             </div>
 
             <button
               type="button"
-              onClick={(e) => {
-                e.stopPropagation()
-                goToDetail()
-              }}
-              className="w-full text-center text-sm font-semibold text-[oklch(0.58_0.26_290)] hover:underline pt-1"
+              onClick={(e) => { e.stopPropagation(); goToDetail() }}
+              className="w-full text-center text-sm font-semibold text-amber-700 dark:text-amber-400 hover:underline pt-2 border-t border-dashed border-border/60"
             >
               Voir le détail complet →
             </button>
