@@ -77,7 +77,7 @@ export default function ScanResultsView({ scan, assets, onRestart }: Props) {
           {/* Métadonnées & Identité du Scan */}
           <div className="space-y-3 max-w-xl">
             <div className="flex items-center gap-3 flex-wrap">
-              <h2>{scan.name}</h2>
+              <h2 className="font-medium">{scan.name}</h2>
               <StatusBadge status={scan.status} />
             </div>
             

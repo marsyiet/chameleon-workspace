@@ -226,7 +226,7 @@ export default function AssetDetailPage() {
                   rel="noopener noreferrer"
                   className="group/link flex items-center gap-2 mb-1 cursor-pointer text-foreground"
                 >
-                  <h2 className="font-bold truncate">{asset.hostname || asset.ipAddress}</h2>
+                  <h2 className="font-medium truncate">{asset.hostname || asset.ipAddress}</h2>
                   <SquareArrowOutUpRight className="h-4 w-4 shrink-0 opacity-0 scale-90 transition-all duration-200 group-hover/link:opacity-100 group-hover/link:scale-100" />
                 </a>
                 {asset.hostname && <h5 className="text-muted-foreground font-mono mt-0.5">{asset.ipAddress}</h5>}

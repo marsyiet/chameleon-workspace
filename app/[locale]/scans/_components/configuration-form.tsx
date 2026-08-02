@@ -111,7 +111,6 @@ export default function ConfigurationForm({
     <Card className="group relative overflow-hidden rounded-xl border border-border bg-card">
       <CardHeader className="border-b border-dashed border-border/80 pb-4">
         <CardTitle className="flex items-center justify-center gap-2">
-          <Binoculars className={cn("h-8 w-8 shrink-0", styles.icon)} />
           <h3 className="font-normal flex items-center justify-center">Scan Configuration</h3>
         </CardTitle>
       </CardHeader>

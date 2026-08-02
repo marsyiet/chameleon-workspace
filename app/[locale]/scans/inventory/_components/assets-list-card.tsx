@@ -1,56 +1,53 @@
 "use client"
-
-import { useState } from "react"
-import { Input } from "@/components/ui/input"
 import { Skeleton } from "@/components/ui/skeleton"
 import { useInventoryAssets } from "@/hooks/assets/use-inventory-assets"
 import { cn } from "@/lib/utils"
-import { SearchIcon } from "lucide-react"
 import { AssetCard } from "./asset-card"
+import { FACET_GROUPS, type AssetFilters } from "./asset-filters"
 
 interface AssetListCardProps {
   className?: string
+  activeFilters?: AssetFilters
+  search?: string
 }
 
-export default function AssetListCard({ className }: AssetListCardProps) {
+export default function AssetListCard({
+  className,
+  activeFilters = {},
+  search = "",
+}: AssetListCardProps) {
   const { data: assets, isLoading, error } = useInventoryAssets()
-  const [search, setSearch] = useState("")
   const assetsArray = Array.isArray(assets) ? assets : []
-  
+
   const filtered = assetsArray.filter((asset) => {
     const query = search.toLowerCase()
-    return (
+    const matchesSearch =
+      !query ||
       asset.ipAddress?.toLowerCase().includes(query) ||
       asset.hostname?.toLowerCase().includes(query) ||
       asset.rdns?.toLowerCase().includes(query) ||
-      (asset.tags ?? []).some((t) => t.toLowerCase().includes(query)) ||
+      (asset.tags ?? []).some((t: string) => t.toLowerCase().includes(query)) ||
       asset.os?.toLowerCase().includes(query)
-    )
+
+    if (!matchesSearch) return false
+
+    for (const group of FACET_GROUPS) {
+      const activeInGroup = activeFilters[group.key] ?? []
+      if (activeInGroup.length === 0) continue
+
+      const matchesGroup = group.facets
+        .filter((f) => activeInGroup.includes(f.key))
+        .some((f) => f.test(asset))
+
+      if (!matchesGroup) return false
+    }
+
+    return true
   })
 
   return (
     <div className={cn("flex flex-col space-y-4", className)}>
-      {/* En-tête + Barre de recherche */}
-      <div className="space-y-2.5">
-        <div className="flex items-center justify-between">
-          <h5 className="text-foreground font-semibold">Tous</h5>
-          <span className="text-sm text-muted-foreground font-medium">
-            {assetsArray.length} au total
-          </span>
-        </div>
 
-        <div className="relative">
-          <SearchIcon className="absolute left-2.5 top-2.5 size-4 text-muted-foreground" />
-          <Input
-            placeholder="Rechercher (IP, hostname, tag, OS...)"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-8"
-          />
-        </div>
-      </div>
-
-      {/* Contenu principal sans contrainte de ScrollArea interne */}
       <div>
         {isLoading ? (
           <div className="space-y-3">
