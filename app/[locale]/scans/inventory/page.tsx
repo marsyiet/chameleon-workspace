@@ -2,7 +2,6 @@
 import React, { useState, useMemo } from "react"
 import AssetListCard from "./_components/assets-list-card"
 import AssetFiltersCard, { type AssetFilters } from "./_components/asset-filters"
-import GeoMapCard from "../_components/geo-map/geo-map-card"
 import { useInventoryAssets } from "@/hooks/assets/use-inventory-assets"
 import { parseAssetQuery } from "@/lib/parse-asset-query"
 import AssetSearchBar from "@/components/custom/asset-searchbar"
