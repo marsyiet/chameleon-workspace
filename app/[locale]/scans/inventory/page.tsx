@@ -57,9 +57,6 @@ const Page = () => {
     return (
         <div className="flex flex-col gap-6">
             <div className="flex flex-col gap-4">
-                <h3 className="font-normal flex items-center justify-center py-8">
-                    Inventaire
-                </h3>
                 <AssetSearchBar value={query} onChange={setQuery} resultCount={resultCount} />
             </div>
 

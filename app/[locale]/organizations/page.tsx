@@ -1,21 +1,18 @@
 "use client"
-
 import { useState } from "react"
 import { DataTable } from "@/components/data-table/data-table"
 import { columns } from "./_components/columns"
-import { useScans } from "@/hooks/scans/use-scans"
-import { useDeleteScan } from "@/hooks/scans/use-delete-scan"
-import LoaderGlobal from "./_components/loader-global"
+import { useOrganizations, useDeleteOrganization } from "@/hooks/organizations/organizations-hooks"
+import LoaderGlobal from "../scans/_components/loader-global"
 
-export default function ScansPage() {
+export default function OrganizationsPage() {
   const [page, setPage] = useState(1)
   const [limit, setLimit] = useState(10)
   const [search, setSearch] = useState("")
+  const { data, isLoading, error } = useOrganizations(page, limit, search)
+  const { mutate: deleteOrganization } = useDeleteOrganization()
 
-  const { data, isLoading, error } = useScans(page, limit, search)
-  const { mutate: deleteScan } = useDeleteScan()
-
-  const scans = data?.data?.scans ?? []
+  const organizations = data?.data?.organizations ?? []
   const total = data?.data?.total ?? 0
   const pageCount = Math.ceil(total / limit)
 
@@ -26,7 +23,7 @@ export default function ScansPage() {
     <div className="space-y-4">
       <DataTable
         columns={columns}
-        data={scans}
+        data={organizations}
         pageCount={pageCount}
         pageIndex={page - 1}
         pageSize={limit}
@@ -35,11 +32,10 @@ export default function ScansPage() {
         total={total}
         search={search}
         onSearchChange={(s) => { setSearch(s); setPage(1) }}
-        searchPlaceholder="Rechercher un scan..."
+        searchPlaceholder="Rechercher une organisation..."
         getRowId={(row) => row._id}
-        onDeleteSelected={(ids) => ids.forEach((id) => deleteScan(id))}
+        onDeleteSelected={(ids) => ids.forEach((id) => deleteOrganization(id))}
       />
     </div>
-
   )
 }

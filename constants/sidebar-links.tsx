@@ -8,6 +8,7 @@ import {
   ClipboardListIcon,
   Settings2Icon,
   ShieldCheckIcon,
+  Building2,
 } from "lucide-react"
 
 export type NavAccent = "violet" | "teal" | "amber" | "rose"
@@ -63,9 +64,9 @@ export const data = () => {
         accent: "teal" as NavAccent,
         items: [
           { title: "Inventaire", url: "/scans/inventory" },
-          { title: "All Scans", url: "/scans" },
-          { title: "New Scan", url: "/scans/new" },
-          { title: "Scheduled Scans", url: "/scans/scheduled" },
+          { title: "Tous les scans", url: "/scans" },
+          { title: "Nouveau scan", url: "/scans/new" },
+          { title: "Programmation des scans", url: "/scans/scheduled" },
         ],
       },
       {
@@ -75,7 +76,7 @@ export const data = () => {
         accent: "amber" as NavAccent,
         items: [
           { title: "Threat Intelligence", url: "/threat-intel" },
-          { title: "Alertes & Changements", url: "/surveillance/alerts" },
+          { title: "Alertes & Changements", url: "/changes" },
         ],
       },
       {
@@ -84,18 +85,14 @@ export const data = () => {
         icon: <ShieldAlertIcon />,
         accent: "rose" as NavAccent,
         items: [
-          { title: "Vulnerabilities", url: "/vulnerabilities" },
-          { title: "Reports", url: "/reports" },
-          { title: "Remediation", url: "/remediation" },
-          { title: "Firewall Integrations", url: "/integrations/firewall" },
+          { title: "Rapports", url: "/reports" },
         ],
       },
     ],
     administration: [
-      { name: "Users", url: "/users", icon: <UsersIcon />, accent: "violet" as NavAccent },
+      { name: "Organizations", url: "/organizations", icon: <Building2 />, accent: "violet" as NavAccent },
       { name: "Roles", url: "/roles", icon: <KeyRoundIcon />, accent: "teal" as NavAccent },
-      { name: "Audit Logs", url: "/audit-logs", icon: <ClipboardListIcon />, accent: "amber" as NavAccent },
-      { name: "Settings", url: "/settings", icon: <Settings2Icon />, accent: "rose" as NavAccent },
+      { name: "Logs d'audit", url: "/audit-logs", icon: <ClipboardListIcon />, accent: "amber" as NavAccent },
     ],
   }
 }

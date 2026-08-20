@@ -109,13 +109,13 @@ export default function ConfigurationForm({
 
   return (
     <Card className="group relative overflow-hidden rounded-xl border border-border bg-card">
-      <CardHeader className="border-b border-dashed border-border/80 pb-4">
+      <CardHeader className="border-b border-dashed border-border/80">
         <CardTitle className="flex items-center justify-center gap-2">
           <h3 className="font-normal flex items-center justify-center">Scan Configuration</h3>
         </CardTitle>
       </CardHeader>
 
-      <CardContent className="pt-6">
+      <CardContent>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <FieldGroup>
             <Controller

@@ -1,6 +1,6 @@
 "use client"
 import { useParams, useRouter } from "next/navigation"
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import L from "leaflet"
 import "leaflet/dist/leaflet.css"
 import {
@@ -8,9 +8,10 @@ import {
   MapPin, Server, Clock, Building2, Tag, Network, ShieldAlert,
   KeyRound, FileText, Radio, Code2, Mail, Link2, Cpu,
   Fingerprint, Eye, Shield, AlertTriangle, CheckCircle2,
-  SquareArrowOutUpRight, UserCheck,
+  SquareArrowOutUpRight, UserCheck, Download, Loader2,
 } from "lucide-react"
 import { useAsset } from "@/hooks/assets/use-asset"
+import { api } from "@/lib/axios"
 import { Button } from "@/components/ui/button"
 import LoaderGlobal from "../../../_components/loader-global"
 import { CveList } from "../../_components/cve-list"
@@ -19,9 +20,9 @@ import { cn } from "@/lib/utils"
 /* ── Constantes de style ─────────────────────────────────────────────── */
 const SEVERITY_STYLE: Record<string, { bg: string; text: string; label: string; bar: string }> = {
   critical: { bg: "bg-red-500/15", text: "text-red-600 dark:text-red-400", label: "Critique", bar: "bg-red-500" },
-  high:     { bg: "bg-orange-500/15", text: "text-orange-600 dark:text-orange-400", label: "Élevé", bar: "bg-orange-500" },
-  medium:   { bg: "bg-amber-500/15", text: "text-amber-600 dark:text-amber-400", label: "Moyen", bar: "bg-amber-500" },
-  low:      { bg: "bg-blue-500/15", text: "text-blue-600 dark:text-blue-400", label: "Faible", bar: "bg-blue-500" },
+  high: { bg: "bg-orange-500/15", text: "text-orange-600 dark:text-orange-400", label: "Élevé", bar: "bg-orange-500" },
+  medium: { bg: "bg-amber-500/15", text: "text-amber-600 dark:text-amber-400", label: "Moyen", bar: "bg-amber-500" },
+  low: { bg: "bg-blue-500/15", text: "text-blue-600 dark:text-blue-400", label: "Faible", bar: "bg-blue-500" },
   informational: { bg: "bg-muted", text: "text-muted-foreground", label: "Informationnel", bar: "bg-primary" },
 }
 
@@ -32,15 +33,15 @@ const CONFIDENCE_LABEL: Record<string, string> = {
 }
 
 const OWNER_SOURCE_LABEL: Record<string, string> = {
-  declared:     "Déclaré lors du scan",
-  tls_subject:  "Certificat TLS (subject)",
-  tls_san:      "Certificat TLS (SAN)",
-  rdns:         "DNS inverse",
-  hostname:     "Nom d'hôte",
-  http_title:   "Titre de la page",
-  banner:       "Bannière protocolaire",
+  declared: "Déclaré lors du scan",
+  tls_subject: "Certificat TLS (subject)",
+  tls_san: "Certificat TLS (SAN)",
+  rdns: "DNS inverse",
+  hostname: "Nom d'hôte",
+  http_title: "Titre de la page",
+  banner: "Bannière protocolaire",
   snmp_sysname: "SNMP sysName",
-  whois_ip:     "WHOIS IP",
+  whois_ip: "WHOIS IP",
 }
 
 const ROLE_LABEL: Record<string, string> = {
@@ -192,6 +193,28 @@ export default function AssetDetailPage() {
   const router = useRouter()
   const assetId = params.assetId as string
   const { data: asset, isLoading } = useAsset(assetId)
+  const [downloadingReport, setDownloadingReport] = useState(false)
+
+  const handleDownloadReport = async () => {
+    if (!asset) return
+    setDownloadingReport(true)
+    try {
+      const res = await api.get(`/assets/${asset._id}/report`, {
+        responseType: "blob",
+      })
+      const url = window.URL.createObjectURL(new Blob([res.data]))
+      const a = document.createElement("a")
+      a.href = url
+      a.download = `rapport_${asset.ipAddress}.pdf`
+      a.click()
+      window.URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error(err)
+      alert("Impossible de générer le rapport. Réessayez.")
+    } finally {
+      setDownloadingReport(false)
+    }
+  }
 
   if (isLoading) return <div className="w-full h-full flex items-center justify-center"><LoaderGlobal /></div>
   if (!asset) return <div className="p-8 text-muted-foreground">Actif introuvable</div>
@@ -208,10 +231,31 @@ export default function AssetDetailPage() {
 
   return (
     <div className="w-full mx-auto space-y-6">
-      <Button variant="ghost" size="sm" onClick={() => router.back()}>
-        <ArrowLeft className="h-3.5 w-3.5" />
-        Retour aux résultats
-      </Button>
+      <div className="flex items-center justify-between">
+        <Button variant="ghost" size="sm" onClick={() => router.back()}>
+          <ArrowLeft className="h-3.5 w-3.5" />
+          Retour aux résultats
+        </Button>
+
+        <Button
+          variant="outline"
+          size="sm"
+          onClick={handleDownloadReport}
+          disabled={downloadingReport}
+        >
+          {downloadingReport ? (
+            <>
+              <Loader2 className="h-3.5 w-3.5 animate-spin" />
+              Génération en cours...
+            </>
+          ) : (
+            <>
+              <Download className="h-3.5 w-3.5" />
+              Télécharger le rapport
+            </>
+          )}
+        </Button>
+      </div>
 
       {/* ═══════════════════ HEADER ═══════════════════ */}
       <div className="group relative overflow-hidden rounded-2xl border border-border bg-card px-6 py-6 transition-colors duration-200 hover:bg-secondary/50">
@@ -487,7 +531,14 @@ export default function AssetDetailPage() {
             </div>
             <div className="px-5 py-4">
               {svc.banner && (
-                <p className="text-sm text-muted-foreground font-mono mb-3">{svc.banner}</p>
+                <details className="group/details mb-3">
+                  <summary className="text-sm font-medium text-muted-foreground cursor-pointer flex items-center gap-1.5 hover:text-foreground">
+                    <Code2 className="h-4 w-4" /> Réponse brute du service
+                  </summary>
+                  <pre className="text-sm font-mono bg-muted rounded-lg p-4 mt-3 overflow-x-auto max-h-72 overflow-y-auto whitespace-pre-wrap break-all">
+                    {svc.banner}
+                  </pre>
+                </details>
               )}
               {/* HTTP */}
               {svc.http && svc.http.statusCode && (
@@ -552,7 +603,7 @@ export default function AssetDetailPage() {
                           <Code2 className="h-4 w-4" /> En-têtes HTTP
                         </summary>
                         <pre className="text-sm font-mono bg-muted rounded-lg p-4 mt-3 overflow-x-auto whitespace-pre-wrap break-all">
-{Object.entries(svc.http.headers).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : v}`).join("\n")}
+                          {Object.entries(svc.http.headers).map(([k, v]) => `${k}: ${Array.isArray(v) ? v.join(", ") : v}`).join("\n")}
                         </pre>
                       </details>
                     </>
@@ -565,7 +616,7 @@ export default function AssetDetailPage() {
                           <Code2 className="h-4 w-4" /> Aperçu de la réponse
                         </summary>
                         <pre className="text-sm font-mono bg-muted rounded-lg p-4 mt-3 overflow-x-auto max-h-72 overflow-y-auto whitespace-pre-wrap break-all">
-{svc.http.bodyPreview}
+                          {svc.http.bodyPreview}
                         </pre>
                       </details>
                     </>
